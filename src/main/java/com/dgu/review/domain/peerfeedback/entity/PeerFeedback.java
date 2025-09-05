@@ -26,6 +26,7 @@ public class PeerFeedback{
     foreignKey = @ForeignKey(name = "fk_pf_recoding"))
     private Recoding recoding;
 
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
     foreignKey = @ForeignKey(name = "fk_pf_user"))
