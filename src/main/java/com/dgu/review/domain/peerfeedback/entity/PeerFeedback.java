@@ -21,8 +21,10 @@ public class PeerFeedback{
     @Column(columnDefinition = "TEXT")
     private String body;
 
-    @Column(name = "recoding_id", nullable = false, length = 36)
-    private String recodingId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "recoding_id", nullable = false,
+    foreignKey = @ForeignKey(name = "fk_pf_recoding"))
+    private Recoding recoding;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
