@@ -1,6 +1,7 @@
 package com.dgu.review.domain.interview.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,4 +36,8 @@ public class InterviewSession extends BaseEntity {
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

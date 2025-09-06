@@ -1,11 +1,15 @@
 package com.dgu.review.domain.interview.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "recording")
@@ -31,4 +35,7 @@ public class Recording extends BaseEntity {
 
     @OneToOne(mappedBy = "recording", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private AiFeedback aiFeedback;
+
+    @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
 }

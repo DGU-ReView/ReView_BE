@@ -14,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-
+@Entity
 @Table(name = "peer_feedback")
 public class PeerFeedback extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,4 +33,8 @@ public class PeerFeedback extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false,
     foreignKey = @ForeignKey(name = "fk_pf_user"))
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recording_id", nullable = false)
+    private Recording recording;
 }
