@@ -1,5 +1,6 @@
 package com.dgu.review.domain.community.entity;
 
+import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "community_page")
-public class CommunityPage{
+public class CommunityPage extends BaseEntity {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "page_id")
     private Long id;
@@ -48,11 +49,4 @@ public class CommunityPage{
     foreignKey = @ForeignKey(name = "fk_cp_author")) //외래키 제약 이름 지정
     private User author; //객체 연관관계를 테이블의 외래키로 바꿔서 저장/조회
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 }
