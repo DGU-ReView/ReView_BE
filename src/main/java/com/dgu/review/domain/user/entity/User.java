@@ -3,7 +3,8 @@ package com.dgu.review.domain.user.entity;
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.interview.entity.InterviewSession;
-import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
+import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

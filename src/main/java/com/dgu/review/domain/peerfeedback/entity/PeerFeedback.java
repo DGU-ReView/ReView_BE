@@ -1,4 +1,4 @@
-package com.dgu.review.domain.peerFeedback.entity;
+package com.dgu.review.domain.peerfeedback.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.interview.entity.Recording;
@@ -34,7 +34,5 @@ public class PeerFeedback extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_pf_user"))
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recording_id", nullable = false)
-    private Recording recording;
+
 }
