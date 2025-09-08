@@ -37,3 +37,6 @@ out/
 .vscode/
 
 **/env.properties
+
+### 맥북 메타데이터 ###
+.DS_Store
