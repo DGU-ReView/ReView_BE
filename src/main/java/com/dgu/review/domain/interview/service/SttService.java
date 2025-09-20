@@ -39,6 +39,9 @@ public class SttService {
         recordingRepo.updateSttTextById(r.getId(), "__TRANSCRIBING__");
 
         // 2) 내부 워커 호출 (faster-whisper large-v3)
+        /*
+
+
         SttWorkerRequest payload = new SttWorkerRequest(
                 r.getId(),
                 s3Bucket,
@@ -62,7 +65,7 @@ public class SttService {
             String errorMessage = "Worker dispatch failed: " + e.getMessage();
             recordingRepo.updateSttTextById(r.getId(), errorMessage);
             throw new IllegalStateException(errorMessage, e);
-        }
+        }*/
 
         return new SttEnqueueResponse(r.getId(), "TRANSCRIBING");
     }

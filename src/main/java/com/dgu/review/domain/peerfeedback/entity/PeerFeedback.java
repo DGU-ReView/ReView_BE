@@ -24,9 +24,9 @@ public class PeerFeedback extends BaseEntity {
     private String body;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "recoding_id", nullable = false,
-    foreignKey = @ForeignKey(name = "fk_pf_recoding"))
-    private Recording recoding;
+    @JoinColumn(name = "recording_id", nullable = false,
+    foreignKey = @ForeignKey(name = "fk_pf_recording"))
+    private Recording recording;
 
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
