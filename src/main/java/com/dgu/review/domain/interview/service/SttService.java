@@ -29,10 +29,10 @@ public class SttService {
     private final RecordingStatusService statusService;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${stt.worker.base-url:http://localhost:8081}")
+    @Value("${stt.worker.base-url}")
     private String workerBaseUrl;
 
-    @Value("${app.s3.bucket:your-audio-bucket}")
+    @Value("${app.s3.bucket}")
     private String s3Bucket;
 
     @Transactional
