@@ -29,12 +29,12 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    // 실패 응답 
-    public static <T> ApiResponse<T> error(String errorCode) {
+    // 실패 (코드/메시지 지정)
+    public static <T> ApiResponse<T> error(String errorCode, String message) {
         return ApiResponse.<T>builder()
                 .errorCode(errorCode)
-                .message("error")
-                .result(null)
+                .message(message)
                 .build();
     }
+
 }

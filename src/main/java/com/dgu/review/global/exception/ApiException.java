@@ -1,17 +1,21 @@
 package com.dgu.review.global.exception;
 
-//서비스 에러 
+// 서비스 에러
 public class ApiException extends RuntimeException {
- private final String errorCode;
- private final int httpStatus;
 
- public ApiException(String errorCode, int httpStatus) {
-     super(errorCode);
-     this.errorCode = errorCode;
-     this.httpStatus = httpStatus;
- }
+    private final ErrorCode errorCode;
 
+    // ErrorCode의 기본 메시지 사용
+    public ApiException(ErrorCode errorCode) {
+        super(errorCode.defaultMessage());
+        this.errorCode = errorCode;
+    }
 
- public String getErrorCode() { return errorCode; }
- public int getHttpStatus() { return httpStatus; }
+    // 커스텀 메시지로 덮어쓰기
+    public ApiException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
+    public ErrorCode getErrorCode() { return errorCode; }
 }
