@@ -3,6 +3,7 @@ package com.dgu.review.domain.interview.service;
 import com.dgu.review.domain.interview.dto.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.RecordingCreateResponse;
 //import com.dgu.review.domain.interview.dto.RecordingManifestDetailResponse;
+import com.dgu.review.domain.interview.dto.SessionResultsResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -59,13 +60,19 @@ public class InterviewSessionService {
 
 
     @Transactional
-    public RecordingCreateResponse createAndTranscribe(Long sessionId, RecordingCreateRequest req) { // ✅ sessionId 추가
+    public SessionResultsResponse createAndTranscribe(Long sessionId, RecordingCreateRequest req) {
         Recording saved = saveRecording(sessionId, req);
 
+        // 초기 상태 세팅
         statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
+
+        // STT 비동기 실행
         sttService.enqueue(saved.getId());
-        return new RecordingCreateResponse(saved.getId(), RecordingStatus.TRANSCRIBING.name());
+
+        // 세션 단위 상태 반환
+        return sttService.getSessionResults(sessionId);
     }
+
 
     private Recording saveRecording(Long sessionId, RecordingCreateRequest req) {
         var question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());

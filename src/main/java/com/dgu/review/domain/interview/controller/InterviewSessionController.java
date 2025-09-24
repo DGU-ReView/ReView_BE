@@ -8,6 +8,7 @@ package com.dgu.review.domain.interview.controller;
 
 import com.dgu.review.domain.interview.dto.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.RecordingCreateResponse;
+import com.dgu.review.domain.interview.dto.SessionResultsResponse;
 import com.dgu.review.domain.interview.service.InterviewSessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +28,13 @@ public class InterviewSessionController {
     private final InterviewSessionService interviewSessionService;
 
 
-    @PostMapping("/{sessionId}/recordings")
-    public ResponseEntity<RecordingCreateResponse> createRecordingAndTranscribe(
+    @PostMapping("/{sessionId}/feedback:submit")
+    public ResponseEntity<SessionResultsResponse> submitFeedback(
             @PathVariable Long sessionId,
             @Valid @RequestBody RecordingCreateRequest req
     ) {
         var res = interviewSessionService.createAndTranscribe(sessionId, req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(res);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(res);
     }
 
     /**
