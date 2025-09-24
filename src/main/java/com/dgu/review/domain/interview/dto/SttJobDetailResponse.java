@@ -10,7 +10,6 @@ public class SttJobDetailResponse {
     private String status;     // UPLOADED / TRANSCRIBING / SUCCEEDED
     private String sttText;    // 완료 시에만 표시될 결과값
     private String resultSrt;  // 전사된 자막 파일
-    private String error;      // 전사 실패했을때 오류 메시지
 }
 
 

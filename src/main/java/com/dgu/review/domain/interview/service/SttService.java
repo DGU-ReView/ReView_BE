@@ -1,13 +1,14 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.dto.SessionResultsResponse;
 import com.dgu.review.domain.interview.dto.SttEnqueueResponse;
 import com.dgu.review.domain.interview.dto.SttJobDetailResponse;
 import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 
 
@@ -24,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 public class SttService {
 
     private final RecordingRepository recordingRepo;
+    private final RecordingStatusService statusService;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Value("${stt.worker.base-url:http://localhost:8081}")
@@ -37,46 +40,20 @@ public class SttService {
         Recording r = recordingRepo.findById(recordingId)
                 .orElseThrow(() -> new IllegalArgumentException("Recording not found"));
 
-        String status = deriveStatus(r);
-        if ("TRANSCRIBING".equals(status) || "SUCCEEDED".equals(status)) {
-            return new SttEnqueueResponse(r.getId(), status);
+        RecordingStatus current = statusService.getStatus(recordingId);
+        if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETE) {
+            return new SttEnqueueResponse(r.getId(), current.name());
         }
-        // FAILED 상태도 재시도 가능
-        // UPLOADED 상태여야 시작 가능
 
-        // 1) 상태를 TRANSCRIBING으로 (setter 없이 JPQL update)
-        recordingRepo.updateSttTextById(r.getId(), "__TRANSCRIBING__");
+        // 상태를 Redis에 TRANSCRIBING으로 기록
+        statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
 
-        // 2) 내부 비동기 워커 실행 (Whisper large-v3)
+        // 내부 비동기 워커 실행
         sttAsyncWorker(r);
 
-        // 3) 외부 워커 호출 (faster-whisper large-v3) -> 추후 AWS Lambda 연동 시 사용
-    /*
-    SttWorkerRequest payload = new SttWorkerRequest(
-            r.getId(),
-            s3Bucket,
-            r.getObjectKey(),
-            "ko",
-            "large-v3",
-            false
-    );
-    try {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<SttWorkerRequest> entity = new HttpEntity<>(payload, headers);
-        restTemplate.exchange(
-                workerBaseUrl + "/worker/transcribe",
-                HttpMethod.POST, entity, String.class
-        );
-    } catch (Exception e) {
-        String errorMessage = "Worker dispatch failed: " + e.getMessage();
-        recordingRepo.updateSttTextById(r.getId(), errorMessage);
-        throw new IllegalStateException(errorMessage, e);
+        return new SttEnqueueResponse(r.getId(), RecordingStatus.TRANSCRIBING.name());
     }
-    */
 
-        return new SttEnqueueResponse(r.getId(), "TRANSCRIBING");
-    }
 
 
     /**
@@ -85,26 +62,16 @@ public class SttService {
     @Async
     public void sttAsyncWorker(Recording recording) {
         try {
-            // 현재 실행 중인 프로젝트 루트 경로 가져오기
             String projectRoot = System.getProperty("user.dir");
-
-            // 오디오 파일 경로
             String audioPath = projectRoot + File.separator + "audio_files" + File.separator + recording.getObjectKey();
-
-            // 파이썬 스크립트 경로
             String scriptPath = projectRoot + File.separator + "stt_worker" + File.separator + "transcribe.py";
 
-            ProcessBuilder pb = new ProcessBuilder(
-                    "python", scriptPath, audioPath
-            );
-            pb.directory(new File(projectRoot)); // 실행 디렉토리를 프로젝트 루트로 고정
+            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPath);
+            pb.directory(new File(projectRoot));
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)
-            );
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             StringBuilder output = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
@@ -113,15 +80,18 @@ public class SttService {
             int exitCode = process.waitFor();
 
             if (exitCode == 0) {
+                // 결과 텍스트 저장
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
+                // 상태 COMPLETE 저장
+                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETE);
             } else {
-                recordingRepo.updateSttTextById(recording.getId(), "FAILED: Whisper 실행 오류");
+                // 실패 → 재시도 가능하도록 다시 UPLOADED 상태로
+                statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
             }
         } catch (Exception e) {
-            recordingRepo.updateSttTextById(recording.getId(), "FAILED: " + e.getMessage());
+            statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
         }
     }
-
 
 
     @Transactional
@@ -134,20 +104,50 @@ public class SttService {
     public SttJobDetailResponse getDetail(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
                 .orElseThrow(() -> new IllegalArgumentException("Recording not found"));
-        String status = deriveStatus(r);
-        String text = "SUCCEEDED".equals(status) ? r.getSttText() : null;
-        String error = "FAILED".equals(status) ? r.getSttText() : null;
-        return new SttJobDetailResponse(r.getId(), status, text, null, error);
+        RecordingStatus status = statusService.getStatus(recordingId);
+        String text = status == RecordingStatus.COMPLETE ? r.getSttText() : null;
+
+        return new SttJobDetailResponse(r.getId(), status.name(), text, null);
     }
 
-    private String deriveStatus(Recording r) {
-        String t = r.getSttText();
-        if (t == null || t.isEmpty()) return "UPLOADED";
-        if ("__TRANSCRIBING__".equals(t)) return "TRANSCRIBING";
-        if (t.startsWith("Worker dispatch failed")) return "FAILED"; // 에러 메시지 패턴으로 구분
-        return "SUCCEEDED";
-    }
 
+
+    //세션 단위 polling: 세션 안의 녹음 조회하고 상태 받아서 리스트 반환하기
+    @Transactional
+    public SessionResultsResponse getSessionResults(Long sessionId) {
+        var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId); // ✅ 변경
+        if (recordings.isEmpty()) {
+            throw new IllegalArgumentException("No recordings found for sessionId: " + sessionId);
+        }
+
+        var items = recordings.stream().map(r -> {
+            var status = statusService.getStatus(r.getId());          // ✅ Redis 기준
+            var text   = (status == RecordingStatus.COMPLETE) ? r.getSttText() : null;
+            return new SessionResultsResponse.Item(r.getId(), status.name(), text);
+        }).toList();
+
+        // 집계 규칙 동일
+        boolean allComplete = items.stream().allMatch(i -> "COMPLETE".equals(i.status()));
+        boolean anyTrans = items.stream().anyMatch(i -> "TRANSCRIBING".equals(i.status()));
+        String overall = allComplete ? "COMPLETE" : (anyTrans ? "TRANSCRIBING" : "UPLOADED");
+
+        return new SessionResultsResponse(sessionId, overall, items);
+    }
+    // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도
+    private String aggregate(List<SessionResultsResponse.Item> items) {
+        boolean allComplete = true;
+        boolean anyTranscribing = false;
+
+        for (var it : items) {
+            String s = it.status();
+            if (!"COMPLETE".equals(s)) allComplete = false;
+            if ("TRANSCRIBING".equals(s)) anyTranscribing = true;
+        }
+
+        if (allComplete) return "COMPLETE";
+        if (anyTranscribing) return "TRANSCRIBING";
+        return "UPLOADED";
+    }
     // 워커에 넘기는 최소 페이로드
     public record SttWorkerRequest(
             Long recordingId, String s3Bucket, String objectKey,
