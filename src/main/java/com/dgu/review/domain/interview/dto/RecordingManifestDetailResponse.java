@@ -1,3 +1,4 @@
+/*
 package com.dgu.review.domain.interview.dto;
 
 import lombok.AllArgsConstructor;
@@ -9,3 +10,5 @@ public class RecordingManifestDetailResponse {
     private String objectKey;
     private String status;
 }
+ */
+
