@@ -40,3 +40,5 @@ out/
 
 ### 맥북 메타데이터 ###
 .DS_Store
+
+src/main/java/com/dgu/review/domain/localtest/

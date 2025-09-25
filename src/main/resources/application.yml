@@ -18,3 +18,9 @@ spring:
         use_sql_comments: true
         jdbc:
           batch_size: 1000
+  bedrock:
+    region: ap-northeast-2
+    model-id: anthropic.claude-3-5-sonnet-20240620-v1:0
+    max-tokens: 512
+    temperature: 0.4
+    topP: 0.9
