@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 //파일이 어떤 상태인지 추적하고, DB에 그 메타데이터(버킷/경로/상태/길이 등)를 저장, 갱신
 
 @RestController //api 요청을 받는 컨트롤러
@@ -29,20 +30,19 @@ public class InterviewSessionController {
 
 
     @PostMapping("/{sessionId}/feedback:submit")
-    public ResponseEntity<SessionResultsResponse> submitFeedback(
+    public ResponseEntity<SessionResultsResponse> submitRecordings(
             @PathVariable Long sessionId,
-            @Valid @RequestBody RecordingCreateRequest req
+            @Valid @RequestBody List<RecordingCreateRequest> requests
     ) {
-        var res = interviewSessionService.createAndTranscribe(sessionId, req);
+        var res = interviewSessionService.createAndTranscribe(sessionId, requests);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(res);
     }
-
     /**
      * [녹음 상세 조회]: 일단 주석 처리
 
-    @GetMapping("/{id}")
-    public ResponseEntity<RecordingManifestDetailResponse> get(@PathVariable Long id) {
-        return ResponseEntity.ok(manifestService.get(id));
-    }
+     @GetMapping("/{id}")
+     public ResponseEntity<RecordingManifestDetailResponse> get(@PathVariable Long id) {
+     return ResponseEntity.ok(manifestService.get(id));
+     }
      */
 }

@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter @AllArgsConstructor
 public class SttJobDetailResponse {
     private Long recordingId;
-    private String status;     // UPLOADED / TRANSCRIBING / SUCCEEDED
+    private String status;     // UPLOADED / TRANSCRIBING / COMPLETED
     private String sttText;    // 완료 시에만 표시될 결과값
     private String resultSrt;  // 전사된 자막 파일
 }

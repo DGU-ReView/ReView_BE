@@ -127,25 +127,18 @@ public class SttService {
         }).toList();
 
         // 집계 규칙 동일
-        boolean allComplete = items.stream().allMatch(i -> "COMPLETE".equals(i.status()));
-        boolean anyTrans = items.stream().anyMatch(i -> "TRANSCRIBING".equals(i.status()));
-        String overall = allComplete ? "COMPLETE" : (anyTrans ? "TRANSCRIBING" : "UPLOADED");
+        // 중복 제거 -> aggregate 메소드 사용
+        String overall = aggregate(items);
 
         return new SessionResultsResponse(sessionId, overall, items);
     }
     // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도
     private String aggregate(List<SessionResultsResponse.Item> items) {
-        boolean allComplete = true;
-        boolean anyTranscribing = false;
-
-        for (var it : items) {
-            String s = it.status();
-            if (!"COMPLETE".equals(s)) allComplete = false;
-            if ("TRANSCRIBING".equals(s)) anyTranscribing = true;
-        }
+        boolean allComplete = items.stream().allMatch(i -> "COMPLETE".equals(i.status()));
+        boolean anyTrans = items.stream().anyMatch(i -> "TRANSCRIBING".equals(i.status()));
 
         if (allComplete) return "COMPLETE";
-        if (anyTranscribing) return "TRANSCRIBING";
+        if (anyTrans) return "TRANSCRIBING";
         return "UPLOADED";
     }
     // 워커에 넘기는 최소 페이로드

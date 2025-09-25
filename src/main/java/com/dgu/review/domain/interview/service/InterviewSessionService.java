@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 //녹음 등록과 조회를 처리하는 로직
 @Service
@@ -60,16 +61,18 @@ public class InterviewSessionService {
 
 
     @Transactional
-    public SessionResultsResponse createAndTranscribe(Long sessionId, RecordingCreateRequest req) {
-        Recording saved = saveRecording(sessionId, req);
+    public SessionResultsResponse createAndTranscribe(Long sessionId, List<RecordingCreateRequest> requests) {
+        for (RecordingCreateRequest req : requests) {
+            Recording saved = saveRecording(sessionId, req);
 
-        // 초기 상태 세팅
-        statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
+            // 초기 상태 세팅
+            statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
 
-        // STT 비동기 실행
-        sttService.enqueue(saved.getId());
+            // STT 비동기 실행
+            sttService.enqueue(saved.getId());
+        }
 
-        // 세션 단위 상태 반환
+        // 응답은 세션 전체 상태 (polling 전용)
         return sttService.getSessionResults(sessionId);
     }
 
