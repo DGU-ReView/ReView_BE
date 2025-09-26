@@ -40,17 +40,18 @@ public class SttService {
     @Transactional
     public SttEnqueueResponse enqueue(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST, "Recording not found: " + recordingId));
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND,
+                        "녹음을 찾을 수 없습니다. 요청 ID=" + recordingId));
 
         RecordingStatus current = statusService.getStatus(recordingId);
-        if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETE) {
-            return new SttEnqueueResponse(r.getId(), current.name());
+        if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETED) {
+            return new SttEnqueueResponse(current.name());
         }
 
         statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
         sttAsyncWorker(r); // 비동기
 
-        return new SttEnqueueResponse(r.getId(), RecordingStatus.TRANSCRIBING.name());
+        return new SttEnqueueResponse(RecordingStatus.TRANSCRIBING.name());
     }
 
 
@@ -82,14 +83,14 @@ public class SttService {
                 // 결과 텍스트 저장
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
                 // 상태 COMPLETE 저장
-                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETE);
+                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED);
             } else {
                 // 실패 → 재시도 가능하도록 다시 UPLOADED 상태로
                 statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
             }
         } catch (Exception e) {
             statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
-            throw new RuntimeException("STT worker failed for recordingId=" + recording.getId(), e);
+            throw new RuntimeException("STT 워커 실행 실패 (녹음 ID=" + recording.getId() + ")", e);
         }
     }
 
@@ -99,18 +100,20 @@ public class SttService {
         // 워커 완료 콜백에서 최종 텍스트 반영
         int updated = recordingRepo.updateSttTextById(recordingId, transcript == null ? "" : transcript);
         if (updated == 0) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "Recording not found for completion: " + recordingId);
+            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND,
+                    "완료 처리 대상 녹음을 찾을 수 없습니다. 요청 ID=" + recordingId);
         }
     }
 
     @Transactional
     public SttJobDetailResponse getDetail(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST, "Recording not found: " + recordingId));
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND,
+                        "녹음을 찾을 수 없습니다. 요청 ID=" + recordingId));
         RecordingStatus status = statusService.getStatus(recordingId);
-        String text = status == RecordingStatus.COMPLETE ? r.getSttText() : null;
+        String text = status == RecordingStatus.COMPLETED ? r.getSttText() : null;
 
-        return new SttJobDetailResponse(r.getId(), status.name(), text, null);
+        return new SttJobDetailResponse(status.name(), text, null);
     }
 
 
@@ -120,12 +123,13 @@ public class SttService {
     public SessionResultsResponse getSessionResults(Long sessionId) {
         var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId);
         if (recordings.isEmpty()) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "No recordings found for sessionId: " + sessionId);
+            throw new ApiException(ErrorCode.SESSION_RECORDINGS_NOT_FOUND,
+                    "세션에 녹음이 존재하지 않습니다. 요청 세션 ID=" + sessionId);
         }
 
         var items = recordings.stream().map(r -> {
             var status = statusService.getStatus(r.getId());
-            var text   = (status == RecordingStatus.COMPLETE) ? r.getSttText() : null;
+            var text   = (status == RecordingStatus.COMPLETED) ? r.getSttText() : null;
             return new SessionResultsResponse.Item(r.getId(), status.name(), text);
         }).toList();
 

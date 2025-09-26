@@ -81,13 +81,15 @@ public class InterviewSessionService {
 
     private Recording saveRecording(Long sessionId, RecordingCreateRequest req) {
         var question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());
-        if (question == null)
-            throw new ApiException(ErrorCode.BAD_REQUEST, "InterviewQuestion not found: " + req.getInterviewQuestionId());
-
-
+        if (question == null) {
+            throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND,
+                    "인터뷰 질문을 찾을 수 없습니다. 요청 ID=" + req.getInterviewQuestionId());
+        }
         var qSessionId = question.getInterviewSession().getId();
         if (!qSessionId.equals(sessionId)) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "Question does not belong to session: " + sessionId);
+            // [수정] BAD_REQUEST → INTERVIEW_SESSION_MISMATCH
+            throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH,
+                    "질문이 요청 세션에 속하지 않습니다. 요청 세션 ID=" + sessionId + ", 질문 세션 ID=" + qSessionId);
         }
 
         var rec = Recording.builder()
