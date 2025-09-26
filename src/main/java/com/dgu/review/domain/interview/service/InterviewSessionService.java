@@ -8,6 +8,8 @@ import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
+import com.dgu.review.global.exception.ApiException;
+import com.dgu.review.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
@@ -79,12 +81,13 @@ public class InterviewSessionService {
 
     private Recording saveRecording(Long sessionId, RecordingCreateRequest req) {
         var question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());
-        if (question == null) throw new IllegalArgumentException("InterviewQuestion not found: " + req.getInterviewQuestionId());
+        if (question == null)
+            throw new ApiException(ErrorCode.BAD_REQUEST, "InterviewQuestion not found: " + req.getInterviewQuestionId());
 
 
         var qSessionId = question.getInterviewSession().getId();
         if (!qSessionId.equals(sessionId)) {
-            throw new IllegalArgumentException("Question does not belong to session: " + sessionId);
+            throw new ApiException(ErrorCode.BAD_REQUEST, "Question does not belong to session: " + sessionId);
         }
 
         var rec = Recording.builder()

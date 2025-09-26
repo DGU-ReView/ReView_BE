@@ -2,6 +2,7 @@ package com.dgu.review.domain.interview.controller;
 
 import com.dgu.review.domain.interview.dto.SessionResultsResponse;
 import com.dgu.review.domain.interview.service.SttService;
+import com.dgu.review.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -23,9 +24,10 @@ public class SttController {
     private final SttService sttService;
 
     //세션 단위 polling API
-    @GetMapping("/{sessionId}/results") // base path 뒤에만 붙임
-    public ResponseEntity<SessionResultsResponse> getSessionStatus(@PathVariable Long sessionId) {
-        return ResponseEntity.ok(sttService.getSessionResults(sessionId));
+    @GetMapping("/{sessionId}/results")
+    public ResponseEntity<ApiResponse<SessionResultsResponse>> getSessionStatus(@PathVariable Long sessionId) {
+        var res = sttService.getSessionResults(sessionId);
+        return ResponseEntity.ok(ApiResponse.ok(res));
     }
 
 

@@ -10,6 +10,7 @@ import com.dgu.review.domain.interview.dto.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.RecordingCreateResponse;
 import com.dgu.review.domain.interview.dto.SessionResultsResponse;
 import com.dgu.review.domain.interview.service.InterviewSessionService;
+import com.dgu.review.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,12 +31,12 @@ public class InterviewSessionController {
 
 
     @PostMapping("/{sessionId}/feedback:submit")
-    public ResponseEntity<SessionResultsResponse> submitRecordings(
+    public ResponseEntity<ApiResponse<SessionResultsResponse>> submitRecordings(
             @PathVariable Long sessionId,
             @Valid @RequestBody List<RecordingCreateRequest> requests
     ) {
         var res = interviewSessionService.createAndTranscribe(sessionId, requests);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(res);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(res));
     }
     /**
      * [녹음 상세 조회]: 일단 주석 처리

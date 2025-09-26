@@ -6,6 +6,8 @@ import com.dgu.review.domain.interview.dto.SttJobDetailResponse;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
+import com.dgu.review.global.exception.ApiException;
+import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,18 +40,15 @@ public class SttService {
     @Transactional
     public SttEnqueueResponse enqueue(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new IllegalArgumentException("Recording not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST, "Recording not found: " + recordingId));
 
         RecordingStatus current = statusService.getStatus(recordingId);
         if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETE) {
             return new SttEnqueueResponse(r.getId(), current.name());
         }
 
-        // 상태를 Redis에 TRANSCRIBING으로 기록
         statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
-
-        // 내부 비동기 워커 실행
-        sttAsyncWorker(r);
+        sttAsyncWorker(r); // 비동기
 
         return new SttEnqueueResponse(r.getId(), RecordingStatus.TRANSCRIBING.name());
     }
@@ -90,6 +89,7 @@ public class SttService {
             }
         } catch (Exception e) {
             statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
+            throw new RuntimeException("STT worker failed for recordingId=" + recording.getId(), e);
         }
     }
 
@@ -97,13 +97,16 @@ public class SttService {
     @Transactional
     public void complete(Long recordingId, String transcript) {
         // 워커 완료 콜백에서 최종 텍스트 반영
-        recordingRepo.updateSttTextById(recordingId, transcript == null ? "" : transcript);
+        int updated = recordingRepo.updateSttTextById(recordingId, transcript == null ? "" : transcript);
+        if (updated == 0) {
+            throw new ApiException(ErrorCode.BAD_REQUEST, "Recording not found for completion: " + recordingId);
+        }
     }
 
     @Transactional
     public SttJobDetailResponse getDetail(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new IllegalArgumentException("Recording not found"));
+                .orElseThrow(() -> new ApiException(ErrorCode.BAD_REQUEST, "Recording not found: " + recordingId));
         RecordingStatus status = statusService.getStatus(recordingId);
         String text = status == RecordingStatus.COMPLETE ? r.getSttText() : null;
 
@@ -115,13 +118,13 @@ public class SttService {
     //세션 단위 polling: 세션 안의 녹음 조회하고 상태 받아서 리스트 반환하기
     @Transactional
     public SessionResultsResponse getSessionResults(Long sessionId) {
-        var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId); // ✅ 변경
+        var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId);
         if (recordings.isEmpty()) {
-            throw new IllegalArgumentException("No recordings found for sessionId: " + sessionId);
+            throw new ApiException(ErrorCode.BAD_REQUEST, "No recordings found for sessionId: " + sessionId);
         }
 
         var items = recordings.stream().map(r -> {
-            var status = statusService.getStatus(r.getId());          // ✅ Redis 기준
+            var status = statusService.getStatus(r.getId());
             var text   = (status == RecordingStatus.COMPLETE) ? r.getSttText() : null;
             return new SessionResultsResponse.Item(r.getId(), status.name(), text);
         }).toList();
