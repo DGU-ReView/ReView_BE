@@ -30,12 +30,13 @@ public class InterviewSessionController {
     private final InterviewSessionService interviewSessionService;
 
 
-    @PostMapping("/{sessionId}/feedback:submit")
-    public ResponseEntity<ApiResponse<SessionResultsResponse>> submitRecordings(
+    @PostMapping("/{sessionId}/questions/{questionId}/recordings")
+    public ResponseEntity<ApiResponse<RecordingCreateResponse>> submitRecording(
             @PathVariable Long sessionId,
-            @Valid @RequestBody List<RecordingCreateRequest> requests
+            @PathVariable Long questionId,
+            @Valid @RequestBody RecordingCreateRequest request
     ) {
-        var res = interviewSessionService.createAndTranscribe(sessionId, requests);
+        var res = interviewSessionService.createAndTranscribe(sessionId, questionId, request);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(res));
     }
     /**

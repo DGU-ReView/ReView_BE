@@ -65,31 +65,28 @@ public class InterviewSessionService {
 
 
     @Transactional
-    public SessionResultsResponse createAndTranscribe(Long sessionId, List<RecordingCreateRequest> requests) {
-        for (RecordingCreateRequest req : requests) {
-            Recording saved = saveRecording(sessionId, req);
+    public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest req) {
+        Recording saved = saveRecording(sessionId, questionId, req);
 
-            // 초기 상태 세팅
-            statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
+        // 초기 상태 세팅
+        statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
 
-            // STT 비동기 실행
-            sttService.enqueue(saved.getId());
-        }
+        // STT 비동기 실행
+        sttService.enqueue(saved.getId());
 
-        // 응답은 세션 전체 상태 (polling 전용)
-        return sttService.getSessionResults(sessionId);
+        return new RecordingCreateResponse(saved.getId(), RecordingStatus.UPLOADED.name());
     }
 
 
-    private Recording saveRecording(Long sessionId, RecordingCreateRequest req) {
-        var question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());
+    private Recording saveRecording(Long sessionId, Long questionId, RecordingCreateRequest req) {
+        var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
-            log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", req.getInterviewQuestionId()); // 내부 로그
+            log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", questionId);
             throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND);
         }
         var qSessionId = question.getInterviewSession().getId();
         if (!qSessionId.equals(sessionId)) {
-            log.warn("질문 세션 불일치. requestSessionId={}, questionSessionId={}", sessionId, qSessionId); // 내부 로그
+            log.warn("질문 세션 불일치. requestSessionId={}, questionSessionId={}", sessionId, qSessionId);
             throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH);
         }
 
