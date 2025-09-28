@@ -16,8 +16,10 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 //녹음 등록과 조회를 처리하는 로직
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class InterviewSessionService {
@@ -82,14 +84,13 @@ public class InterviewSessionService {
     private Recording saveRecording(Long sessionId, RecordingCreateRequest req) {
         var question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());
         if (question == null) {
-            throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND,
-                    "인터뷰 질문을 찾을 수 없습니다. 요청 ID=" + req.getInterviewQuestionId());
+            log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", req.getInterviewQuestionId()); // 내부 로그
+            throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND);
         }
         var qSessionId = question.getInterviewSession().getId();
         if (!qSessionId.equals(sessionId)) {
-            // [수정] BAD_REQUEST → INTERVIEW_SESSION_MISMATCH
-            throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH,
-                    "질문이 요청 세션에 속하지 않습니다. 요청 세션 ID=" + sessionId + ", 질문 세션 ID=" + qSessionId);
+            log.warn("질문 세션 불일치. requestSessionId={}, questionSessionId={}", sessionId, qSessionId); // 내부 로그
+            throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH);
         }
 
         var rec = Recording.builder()

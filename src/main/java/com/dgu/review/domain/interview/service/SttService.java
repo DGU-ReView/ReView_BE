@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SttService {
@@ -40,8 +40,10 @@ public class SttService {
     @Transactional
     public SttEnqueueResponse enqueue(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND,
-                        "녹음을 찾을 수 없습니다. 요청 ID=" + recordingId));
+                .orElseThrow(() -> {
+                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
+                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+                });
 
         RecordingStatus current = statusService.getStatus(recordingId);
         if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETED) {
@@ -90,7 +92,8 @@ public class SttService {
             }
         } catch (Exception e) {
             statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
-            throw new RuntimeException("STT 워커 실행 실패 (녹음 ID=" + recording.getId() + ")", e);
+            log.error("STT 워커 실행 실패 recordingId={}", recording.getId(), e); // 내부 로그
+            throw new RuntimeException("STT 워커 실행 실패", e);
         }
     }
 
@@ -100,16 +103,19 @@ public class SttService {
         // 워커 완료 콜백에서 최종 텍스트 반영
         int updated = recordingRepo.updateSttTextById(recordingId, transcript == null ? "" : transcript);
         if (updated == 0) {
-            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND,
-                    "완료 처리 대상 녹음을 찾을 수 없습니다. 요청 ID=" + recordingId);
+            log.warn("완료 처리 대상 녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
+            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND);
         }
+
     }
 
     @Transactional
     public SttJobDetailResponse getDetail(Long recordingId) {
         Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND,
-                        "녹음을 찾을 수 없습니다. 요청 ID=" + recordingId));
+                .orElseThrow(() -> {
+                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
+                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+                });
         RecordingStatus status = statusService.getStatus(recordingId);
         String text = status == RecordingStatus.COMPLETED ? r.getSttText() : null;
 
@@ -123,14 +129,14 @@ public class SttService {
     public SessionResultsResponse getSessionResults(Long sessionId) {
         var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId);
         if (recordings.isEmpty()) {
-            throw new ApiException(ErrorCode.SESSION_RECORDINGS_NOT_FOUND,
-                    "세션에 녹음이 존재하지 않습니다. 요청 세션 ID=" + sessionId);
+            log.warn("세션에 녹음이 존재하지 않습니다. sessionId={}", sessionId); // 내부 로그
+            throw new ApiException(ErrorCode.SESSION_RECORDINGS_NOT_FOUND);
         }
 
         var items = recordings.stream().map(r -> {
             var status = statusService.getStatus(r.getId());
             var text   = (status == RecordingStatus.COMPLETED) ? r.getSttText() : null;
-            return new SessionResultsResponse.Item(r.getId(), status.name(), text);
+            return new SessionResultsResponse.Item(r.getId(), status, text);
         }).toList();
 
         // 집계 규칙 동일
@@ -141,12 +147,14 @@ public class SttService {
     }
     // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도
     private String aggregate(List<SessionResultsResponse.Item> items) {
-        boolean allComplete = items.stream().allMatch(i -> "COMPLETE".equals(i.status()));
-        boolean anyTrans = items.stream().anyMatch(i -> "TRANSCRIBING".equals(i.status()));
+        boolean allComplete = items.stream()
+                .allMatch(i -> i.status() == RecordingStatus.COMPLETED);
+        boolean anyTranscribing = items.stream()
+                .anyMatch(i -> i.status() == RecordingStatus.TRANSCRIBING);
 
-        if (allComplete) return "COMPLETE";
-        if (anyTrans) return "TRANSCRIBING";
-        return "UPLOADED";
+        if (allComplete) return RecordingStatus.COMPLETED.name();
+        if (anyTranscribing) return RecordingStatus.TRANSCRIBING.name();
+        return RecordingStatus.UPLOADED.name();
     }
     // 워커에 넘기는 최소 페이로드
     public record SttWorkerRequest(

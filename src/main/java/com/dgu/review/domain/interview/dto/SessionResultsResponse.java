@@ -1,5 +1,7 @@
 package com.dgu.review.domain.interview.dto;
 
+import com.dgu.review.domain.interview.entity.RecordingStatus;
+
 import java.util.List;
 
 /**
@@ -21,7 +23,7 @@ public record SessionResultsResponse(
      */
     public record Item(
             Long recordingId,
-            String status,
+            RecordingStatus status,
             String sttText
     ) {}
 }
