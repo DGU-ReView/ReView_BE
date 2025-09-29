@@ -1,0 +1,6 @@
+faster-whisper==1.2.0
+ffmpeg-python
+huggingface-hub==0.35.0
+torch==2.8.0+cpu
+torchaudio==2.8.0+cpu
+torchvision==0.23.0+cpu
