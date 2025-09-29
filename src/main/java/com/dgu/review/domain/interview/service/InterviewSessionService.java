@@ -74,7 +74,7 @@ public class InterviewSessionService {
         // STT 비동기 실행
         sttService.enqueue(saved.getId());
 
-        return new RecordingCreateResponse(saved.getId(), RecordingStatus.UPLOADED.name());
+        return new RecordingCreateResponse(RecordingStatus.UPLOADED.name());
     }
 
 
