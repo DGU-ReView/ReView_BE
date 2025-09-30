@@ -1,8 +1,7 @@
 package com.dgu.review.domain.interview.service;
 
-import com.dgu.review.domain.interview.dto.SessionResultsResponse;
-import com.dgu.review.domain.interview.dto.SttEnqueueResponse;
-import com.dgu.review.domain.interview.dto.SttJobDetailResponse;
+import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
+import com.dgu.review.domain.interview.dto.response.*;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
@@ -30,6 +29,7 @@ public class SttService {
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final SttFeedbackService sttFeedbackService;
 
     @Value("${stt.worker.base-url}")
     private String workerBaseUrl;
@@ -38,22 +38,22 @@ public class SttService {
     private String s3Bucket;
 
     @Transactional
-    public SttEnqueueResponse enqueue(Long recordingId) {
-        Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> {
-                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
-                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
-                });
+    public SttStatusResponse startSttProcessing(Long recordingId, Long sessionId, Long questionId, RecordingCreateRequest request) {
+//        Recording r = recordingRepo.findById(recordingId)
+//                .orElseThrow(() -> {
+//                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
+//                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+//                });
 
         RecordingStatus current = statusService.getStatus(recordingId);
         if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETED) {
-            return new SttEnqueueResponse(current.name());
+            return new SttStatusResponse(current.name());
         }
 
-        statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
-        sttAsyncWorker(r); // 비동기
+        //statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
+        //sttAsyncWorker(r); // 비동기
 
-        return new SttEnqueueResponse(RecordingStatus.TRANSCRIBING.name());
+        return new SttStatusResponse(RecordingStatus.TRANSCRIBING.name());
     }
 
 
@@ -61,18 +61,36 @@ public class SttService {
     /**
      * Whisper large-v3를 실행하는 비동기 워커
      */
+    @Transactional
     @Async
     public void sttAsyncWorker(Recording recording) {
         try {
+            long started = System.currentTimeMillis();
+            log.info("[sttWorker:start] recordingId={}, thread={}, audioKey={}",
+                    recording.getId(), Thread.currentThread().getName(), recording.getObjectKey());
+
+            //statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING);
+
+            statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING);
+            log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recording.getId());
+            log.info("[status:readback] recordingId={}, now={}", recording.getId(), statusService.getStatus(recording.getId()));
+
             String projectRoot = System.getProperty("user.dir");
             String audioPath = projectRoot + File.separator + "audio_files" + File.separator + recording.getObjectKey();
             String scriptPath = projectRoot + File.separator + "stt_worker" + File.separator + "transcribe.py";
 
+            log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}, audioPath={}",
+                    recording.getId(), projectRoot, scriptPath, audioPath);
+
+           // log.info("Whisper 프로세스 시작: cmd={}, recordingId={}", command, recordingId);
             ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPath);
             pb.directory(new File(projectRoot));
             pb.redirectErrorStream(true);
 
+
             Process process = pb.start();
+            log.info("[sttWorker:proc] recordingId={} processStarted (thread={})",
+                    recording.getId(), Thread.currentThread().getName());
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             StringBuilder output = new StringBuilder();
             String line;
@@ -80,6 +98,7 @@ public class SttService {
                 output.append(line);
             }
             int exitCode = process.waitFor();
+            log.info("[sttWorker:exit] recordingId={}, exitCode={}, elapsedMs={}", recording.getId(), exitCode, System.currentTimeMillis()-started);
 
             if (exitCode == 0) {
                 // 결과 텍스트 저장
@@ -87,6 +106,8 @@ public class SttService {
                 // 상태 COMPLETE 저장
                 statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED);
             } else {
+                log.warn("[sttWorker:nonzero-exit] recordingId={} -> UPLOADED, exitCode={}", recording.getId(), exitCode);
+
                 // 실패 → 재시도 가능하도록 다시 UPLOADED 상태로
                 statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
             }
@@ -145,6 +166,17 @@ public class SttService {
 
         return new SessionResultsResponse(sessionId, overall, items);
     }
+
+    @Transactional
+    public SessionResultsResponse.Item getRecordingResults(Long recordingId) {
+        var recording = recordingRepo.findById(recordingId)
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
+        var status = statusService.getStatus(recordingId);
+        var text = (status == RecordingStatus.COMPLETED) ? recording.getSttText() : null;
+        return new SessionResultsResponse.Item(recordingId, status, text);
+    }
+
     // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도
     private String aggregate(List<SessionResultsResponse.Item> items) {
         boolean allComplete = items.stream()

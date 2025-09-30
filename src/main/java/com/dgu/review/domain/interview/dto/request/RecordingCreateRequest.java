@@ -1,4 +1,4 @@
-package com.dgu.review.domain.interview.dto;
+package com.dgu.review.domain.interview.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

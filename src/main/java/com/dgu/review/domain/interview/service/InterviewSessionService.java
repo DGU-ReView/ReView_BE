@@ -1,9 +1,10 @@
 package com.dgu.review.domain.interview.service;
 
-import com.dgu.review.domain.interview.dto.RecordingCreateRequest;
-import com.dgu.review.domain.interview.dto.RecordingCreateResponse;
+import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
+import com.dgu.review.domain.interview.dto.response.GetFollowUpQuestionResponse;
+import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 //import com.dgu.review.domain.interview.dto.RecordingManifestDetailResponse;
-import com.dgu.review.domain.interview.dto.SessionResultsResponse;
+import com.dgu.review.domain.interview.dto.response.SttFeedbackResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -15,7 +16,6 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 //녹음 등록과 조회를 처리하는 로직
@@ -27,10 +27,16 @@ public class InterviewSessionService {
     private final RecordingRepository recordingRepo; //DB에 Recording 엔티티를 저장/조회하는 JPA
     private final SttService sttService;
     private final RecordingStatusService statusService;
+    private final SttFeedbackService sttFeedbackService;
 
     @PersistenceContext
     private EntityManager em; // setter 없이 FK 연결하기 위해 사용
 
+    @Transactional
+    public GetFollowUpQuestionResponse getFollowUpQuestion(Long sessionId, Long questionId, RecordingCreateRequest request) {
+        var res = enqueueRecordingJob(sessionId, questionId, request);
+        return sttFeedbackService.generateAiFeedback(sessionId, questionId);
+    }
     /*
         @Transactional
     public RecordingManifestCreateResponse create(RecordingManifestCreateRequest req) {
@@ -65,14 +71,17 @@ public class InterviewSessionService {
 
 
     @Transactional
-    public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest req) {
+    public RecordingCreateResponse enqueueRecordingJob(Long sessionId, Long questionId, RecordingCreateRequest req) {
         Recording saved = saveRecording(sessionId, questionId, req);
 
+        log.info("[enqueue] saved recordingId={}, qId={}, sessionId={}, status=UPLOADED (thread={})",
+                saved.getId(), questionId, sessionId, Thread.currentThread().getName());
         // 초기 상태 세팅
         statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
-
+        log.info("[enqueue] dispatch async worker recordingId={}", saved.getId());
         // STT 비동기 실행
-        sttService.enqueue(saved.getId());
+        //sttService.startSttProcessing(saved.getId(), sessionId, questionId, req);
+        sttService.sttAsyncWorker(saved);
 
         return new RecordingCreateResponse(RecordingStatus.UPLOADED.name());
     }
@@ -96,6 +105,7 @@ public class InterviewSessionService {
                 .interviewQuestion(question)
                 .build();
 
+        question.attachRecording(rec);
         return recordingRepo.save(rec);
     }
 }

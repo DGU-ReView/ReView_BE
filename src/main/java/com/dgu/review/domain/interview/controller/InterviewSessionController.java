@@ -6,21 +6,22 @@ DB에 레코드 행을 만들어줌.
 
 package com.dgu.review.domain.interview.controller;
 
-import com.dgu.review.domain.interview.dto.RecordingCreateRequest;
-import com.dgu.review.domain.interview.dto.RecordingCreateResponse;
-import com.dgu.review.domain.interview.dto.SessionResultsResponse;
+import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
+import com.dgu.review.domain.interview.dto.response.GetFollowUpQuestionResponse;
+import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 import com.dgu.review.domain.interview.service.InterviewSessionService;
+import com.dgu.review.domain.interview.service.SttFeedbackService;
 import com.dgu.review.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 //파일이 어떤 상태인지 추적하고, DB에 그 메타데이터(버킷/경로/상태/길이 등)를 저장, 갱신
 
+@Slf4j
 @RestController //api 요청을 받는 컨트롤러
 @RequestMapping("/api/interview-sessions")
 @RequiredArgsConstructor
@@ -28,16 +29,18 @@ import java.util.List;
 public class InterviewSessionController {
 
     private final InterviewSessionService interviewSessionService;
-
+    private final SttFeedbackService sttFeedbackService;
 
     @PostMapping("/{sessionId}/questions/{questionId}/recordings")
-    public ResponseEntity<ApiResponse<RecordingCreateResponse>> submitRecording(
+    public ResponseEntity<ApiResponse<GetFollowUpQuestionResponse>> submitRecording(
             @PathVariable Long sessionId,
             @PathVariable Long questionId,
             @Valid @RequestBody RecordingCreateRequest request
     ) {
-        var res = interviewSessionService.createAndTranscribe(sessionId, questionId, request);
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(res));
+        GetFollowUpQuestionResponse response = interviewSessionService.getFollowUpQuestion(sessionId, questionId, request);
+        log.info("[submitRecording:done] sessionId={}, questionId={} (thread={})",
+                sessionId, questionId, Thread.currentThread().getName());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(response));
     }
     /**
      * [녹음 상세 조회]: 일단 주석 처리

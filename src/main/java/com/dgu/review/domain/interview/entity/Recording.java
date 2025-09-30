@@ -1,7 +1,7 @@
 package com.dgu.review.domain.interview.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
-import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
+import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,4 +39,11 @@ public class Recording extends BaseEntity {
 
     @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
+
+    public void attachToQuestion(InterviewQuestion question) {
+        this.interviewQuestion = question;
+        if (question != null && question.getRecording() != this) {
+            question.attachRecording(this);
+        }
+    }
 }

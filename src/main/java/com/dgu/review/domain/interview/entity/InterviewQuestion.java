@@ -41,4 +41,11 @@ public class InterviewQuestion extends BaseEntity {
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
+
+    public void attachRecording(Recording recording) {
+        this.recording = recording;
+        if (recording != null) {
+            recording.attachToQuestion(this);
+        }
+    }
 }

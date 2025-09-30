@@ -30,9 +30,9 @@ stt:
 app:
   s3:
     bucket: your-audio-bucket         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
-  bedrock:
-    region: ap-northeast-2
-    model-id: anthropic.claude-3-5-sonnet-20240620-v1:0
-    max-tokens: 512
-    temperature: 0.4
-    topP: 0.9
+bedrock:
+  region: ap-northeast-2
+  model-id: anthropic.claude-3-5-sonnet-20240620-v1:0
+  max-tokens: 512
+  temperature: 0.4
+  topP: 0.9

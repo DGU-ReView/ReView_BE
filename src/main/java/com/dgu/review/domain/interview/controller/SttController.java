@@ -1,6 +1,6 @@
 package com.dgu.review.domain.interview.controller;
 
-import com.dgu.review.domain.interview.dto.SessionResultsResponse;
+import com.dgu.review.domain.interview.dto.response.SessionResultsResponse;
 import com.dgu.review.domain.interview.service.SttService;
 import com.dgu.review.global.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +27,12 @@ public class SttController {
     @GetMapping("/{sessionId}/results")
     public ResponseEntity<ApiResponse<SessionResultsResponse>> getSessionStatus(@PathVariable Long sessionId) {
         var res = sttService.getSessionResults(sessionId);
+        return ResponseEntity.ok(ApiResponse.ok(res));
+    }
+
+    @GetMapping("/{recordingId}/results")
+    public ResponseEntity<ApiResponse<SessionResultsResponse.Item>> getRecordingStatus(@PathVariable Long recordingId) {
+        var res = sttService.getRecordingResults(recordingId);
         return ResponseEntity.ok(ApiResponse.ok(res));
     }
 
