@@ -1,5 +1,13 @@
 import sys
 import io
+import logging
+import warnings
+
+# 로그 파일을 설정합니다.
+logging.basicConfig(filename="app.log", level=logging.WARNING)
+
+# 경고를 로그 파일로만 기록하도록 설정
+logging.captureWarnings(True)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8') # 한글 깨짐 방지
 from faster_whisper import WhisperModel # faster-whisper 라이브러리에서 WhisperModel 클래스를 가져옴.
 
