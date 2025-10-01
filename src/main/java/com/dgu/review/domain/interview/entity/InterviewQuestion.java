@@ -22,7 +22,7 @@ public class InterviewQuestion extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TINYINT")
+    @Column(columnDefinition = "TINYINT")
     private Integer questionNumber;
 
     @Column(nullable = false, columnDefinition = "text")
@@ -36,7 +36,7 @@ public class InterviewQuestion extends BaseEntity {
     @JoinColumn(name = "parent_question_id")
     private InterviewQuestion parentQuestion;
 
-    @OneToMany(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false)
+    @OneToMany(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.EAGER)
     private List<InterviewQuestion> childrenQuestions = new ArrayList<>();
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
