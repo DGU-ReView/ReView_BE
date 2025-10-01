@@ -32,12 +32,12 @@ public class InterviewSessionController {
     private final SttFeedbackService sttFeedbackService;
 
     @PostMapping("/{sessionId}/questions/{questionId}/recordings")
-    public ResponseEntity<ApiResponse<GetFollowUpQuestionResponse>> submitRecording(
+    public ResponseEntity<ApiResponse<RecordingCreateResponse>> submitRecording(
             @PathVariable Long sessionId,
             @PathVariable Long questionId,
             @Valid @RequestBody RecordingCreateRequest request
     ) {
-        GetFollowUpQuestionResponse response = interviewSessionService.getFollowUpQuestion(sessionId, questionId, request);
+        RecordingCreateResponse response = interviewSessionService.createAndTranscribe(sessionId, questionId, request);
         log.info("[submitRecording:done] sessionId={}, questionId={} (thread={})",
                 sessionId, questionId, Thread.currentThread().getName());
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(response));

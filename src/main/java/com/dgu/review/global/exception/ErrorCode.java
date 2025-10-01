@@ -21,8 +21,11 @@ public enum ErrorCode {
 
     // 세션에 녹음 없음
     SESSION_RECORDINGS_NOT_FOUND("SESSION_RECORDINGS_NOT_FOUND",
-            HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다.");
+            HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다."),
 
+	FOLLOWUP_QUESTION_NOT_FOUND("FOLLOWUP_QUESTION_NOT_FOUND",
+								 HttpStatus.BAD_REQUEST, "해당 질문에 꼬리질문이 존재하지 않습니다."),
+	;
 	private final String code;
 	private final HttpStatus status;
 	private final String defaultMessage;

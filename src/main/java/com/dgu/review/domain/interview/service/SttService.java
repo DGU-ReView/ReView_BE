@@ -2,8 +2,10 @@ package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.response.*;
+import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
+import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -30,6 +32,7 @@ public class SttService {
     private final RecordingStatusService statusService;
     private final RestTemplate restTemplate = new RestTemplate();
     private final SttFeedbackService sttFeedbackService;
+    private final InterviewQuestionRepository interviewQuestionRepository;
 
     @Value("${stt.worker.base-url}")
     private String workerBaseUrl;
@@ -105,6 +108,19 @@ public class SttService {
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
                 // 상태 COMPLETE 저장
                 statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED);
+
+                String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getId(), recording.getInterviewQuestion().getId());
+
+                InterviewQuestion followUpQuestion = interviewQuestionRepository.save(InterviewQuestion.builder()
+                        .question(followUpQuestionText)
+                        .interviewSession(recording.getInterviewQuestion().getInterviewSession())
+                        .parentQuestion(recording.getInterviewQuestion())
+                        .build()
+                );
+
+                recording.getInterviewQuestion().attachFollowUp(followUpQuestion);
+
+                //statusService.setStatus(recording.getId(), RecordingStatus.FEEDBACK_GENERATED);
             } else {
                 log.warn("[sttWorker:nonzero-exit] recordingId={} -> UPLOADED, exitCode={}", recording.getId(), exitCode);
 
@@ -168,13 +184,14 @@ public class SttService {
     }
 
     @Transactional
-    public SessionResultsResponse.Item getRecordingResults(Long recordingId) {
+    public RecordingResultsResponse getRecordingResults(Long recordingId) {
         var recording = recordingRepo.findById(recordingId)
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
         var status = statusService.getStatus(recordingId);
         var text = (status == RecordingStatus.COMPLETED) ? recording.getSttText() : null;
-        return new SessionResultsResponse.Item(recordingId, status, text);
+        var followUpQuestion = (status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getInterviewQuestion().getChildrenQuestions().stream().findFirst().map(InterviewQuestion::getQuestion).orElseThrow(() -> new ApiException(ErrorCode.FOLLOWUP_QUESTION_NOT_FOUND)) : null;
+        return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
     }
 
     // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도

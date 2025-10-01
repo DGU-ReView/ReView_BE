@@ -35,7 +35,7 @@ public class SttFeedbackService {
     @Value("${bedrock.topP}")
     private Double topP;
 
-    public GetFollowUpQuestionResponse generateAiFeedback(Long sessionId, Long questionId) {
+    public String generateAiFeedback(Long sessionId, Long questionId) {
 
         InterviewQuestion interviewQuestion = interviewQuestionRepository.findById(questionId)
                 .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND));
@@ -92,9 +92,7 @@ public class SttFeedbackService {
 
         // 위 값들 로그에 추가
 
-        return GetFollowUpQuestionResponse.builder()
-                .followUpQuestion(respText)
-                .build();
+        return respText;
 
     }
 

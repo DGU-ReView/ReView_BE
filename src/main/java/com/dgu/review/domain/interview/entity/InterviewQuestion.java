@@ -48,4 +48,9 @@ public class InterviewQuestion extends BaseEntity {
             recording.attachToQuestion(this);
         }
     }
+
+    public void attachFollowUp(InterviewQuestion followUpQuestion) {
+        this.childrenQuestions.add(followUpQuestion);
+    }
+    //follow
 }

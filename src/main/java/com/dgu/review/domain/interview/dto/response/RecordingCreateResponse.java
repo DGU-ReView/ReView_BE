@@ -6,5 +6,6 @@ import lombok.Getter;
 
 @Getter @AllArgsConstructor
 public class RecordingCreateResponse {
+    private Long recordingId;
     private String status; // 현재 상태(UPLOADED)
 }

@@ -33,9 +33,9 @@ public class InterviewSessionService {
     private EntityManager em; // setter 없이 FK 연결하기 위해 사용
 
     @Transactional
-    public GetFollowUpQuestionResponse getFollowUpQuestion(Long sessionId, Long questionId, RecordingCreateRequest request) {
-        var res = enqueueRecordingJob(sessionId, questionId, request);
-        return sttFeedbackService.generateAiFeedback(sessionId, questionId);
+    public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest request) {
+        return enqueueRecordingJob(sessionId, questionId, request);
+        //return sttFeedbackService.generateAiFeedback(sessionId, questionId);
     }
     /*
         @Transactional
@@ -83,7 +83,7 @@ public class InterviewSessionService {
         //sttService.startSttProcessing(saved.getId(), sessionId, questionId, req);
         sttService.sttAsyncWorker(saved);
 
-        return new RecordingCreateResponse(RecordingStatus.UPLOADED.name());
+        return new RecordingCreateResponse(saved.getId(), RecordingStatus.UPLOADED.name());
     }
 
 

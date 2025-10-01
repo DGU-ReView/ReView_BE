@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.controller;
 
+import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.dto.response.SessionResultsResponse;
 import com.dgu.review.domain.interview.service.SttService;
 import com.dgu.review.global.response.ApiResponse;
@@ -23,15 +24,15 @@ public class SttController {
 
     private final SttService sttService;
 
-    //세션 단위 polling API
-    @GetMapping("/{sessionId}/results")
-    public ResponseEntity<ApiResponse<SessionResultsResponse>> getSessionStatus(@PathVariable Long sessionId) {
-        var res = sttService.getSessionResults(sessionId);
-        return ResponseEntity.ok(ApiResponse.ok(res));
-    }
+//    //세션 단위 polling API
+//    @GetMapping("/{sessionId}/results")
+//    public ResponseEntity<ApiResponse<SessionResultsResponse>> getSessionStatus(@PathVariable Long sessionId) {
+//        var res = sttService.getSessionResults(sessionId);
+//        return ResponseEntity.ok(ApiResponse.ok(res));
+//    }
 
     @GetMapping("/{recordingId}/results")
-    public ResponseEntity<ApiResponse<SessionResultsResponse.Item>> getRecordingStatus(@PathVariable Long recordingId) {
+    public ResponseEntity<ApiResponse<RecordingResultsResponse>> getRecordingStatus(@PathVariable Long recordingId) {
         var res = sttService.getRecordingResults(recordingId);
         return ResponseEntity.ok(ApiResponse.ok(res));
     }
