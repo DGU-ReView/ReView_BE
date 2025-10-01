@@ -111,6 +111,8 @@ public class SttService {
 
                 String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getId(), recording.getInterviewQuestion().getId());
 
+                statusService.setStatus(recording.getId(), RecordingStatus.FEEDBACK_GENERATED);
+
                 InterviewQuestion followUpQuestion = interviewQuestionRepository.save(InterviewQuestion.builder()
                         .question(followUpQuestionText)
                         .interviewSession(recording.getInterviewQuestion().getInterviewSession())
@@ -189,8 +191,8 @@ public class SttService {
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
         var status = statusService.getStatus(recordingId);
-        var text = (status == RecordingStatus.COMPLETED) ? recording.getSttText() : null;
-        var followUpQuestion = (status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getInterviewQuestion().getChildrenQuestions().stream().findFirst().map(InterviewQuestion::getQuestion).orElseThrow(() -> new ApiException(ErrorCode.FOLLOWUP_QUESTION_NOT_FOUND)) : null;
+        var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getSttText() : null;
+        var followUpQuestion = (status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getInterviewQuestion().getFollowUpQuestion().getQuestion() : null;
         return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
     }
 

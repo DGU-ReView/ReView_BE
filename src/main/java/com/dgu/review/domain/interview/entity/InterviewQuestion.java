@@ -32,12 +32,12 @@ public class InterviewQuestion extends BaseEntity {
     @JoinColumn(name = "interview_session_id", nullable = false)
     private InterviewSession interviewSession;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_question_id")
     private InterviewQuestion parentQuestion;
 
-    @OneToMany(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.EAGER)
-    private List<InterviewQuestion> childrenQuestions = new ArrayList<>();
+    @OneToOne(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.EAGER)
+    private InterviewQuestion followUpQuestion;
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
@@ -50,7 +50,7 @@ public class InterviewQuestion extends BaseEntity {
     }
 
     public void attachFollowUp(InterviewQuestion followUpQuestion) {
-        this.childrenQuestions.add(followUpQuestion);
+        this.followUpQuestion = followUpQuestion;
     }
     //follow
 }
