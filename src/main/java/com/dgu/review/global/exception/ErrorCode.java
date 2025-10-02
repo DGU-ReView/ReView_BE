@@ -2,7 +2,6 @@ package com.dgu.review.global.exception;
 
 import org.springframework.http.HttpStatus;
 
-import lombok.Getter;
 
 public enum ErrorCode {
 
@@ -21,8 +20,21 @@ public enum ErrorCode {
 
     // 세션에 녹음 없음
     SESSION_RECORDINGS_NOT_FOUND("SESSION_RECORDINGS_NOT_FOUND",
-            HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다.");
-
+            HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다."),
+    
+	// 질문 없음
+	Question_NOT_FOUND("Question_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "해당 질문이 존재하지 않습니다."),
+	// 질문의 소유자가 아님 
+	FORBIDDEN_RESOURCE("FORBIDDEN_RESOURCE", 
+			HttpStatus.FORBIDDEN, "해당 질문에 접근 권한이 없습니다."),
+	// 파일 이름에서 확장자 인식 불가 
+	RESUME_EXTENSION_MISSING("RESUME_EXTENSION_MISSING",
+		    HttpStatus.BAD_REQUEST, "파일 확장자를 인식할 수 없습니다. pdf 또는 docx 파일을 올려주세요."),
+	// 지원하지 않는 파일 형식 
+	RESUME_UNSUPPORTED_MEDIA_TYPE( "RESUME_UNSUPPORTED_MEDIA_TYPE",
+			HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 파일 형식입니다.");
+	
 	private final String code;
 	private final HttpStatus status;
 	private final String defaultMessage;
