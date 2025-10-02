@@ -32,6 +32,7 @@ public class InterviewSessionService {
     private final RecordingStatusService statusService;
     private final SttFeedbackService sttFeedbackService;
     private final InterviewQuestionRepository interviewQuestionRepository;
+    private final RecordingJobQueue recordingJobQueue;
 
     @PersistenceContext
     private EntityManager em; // setter 없이 FK 연결하기 위해 사용
@@ -90,7 +91,7 @@ public class InterviewSessionService {
 
             log.info("[enqueue] dispatch async worker recordingId={}", recording.getId());
             // STT 비동기 실행
-            sttService.sttAsyncWorker(recording);
+            recordingJobQueue.enqueue(recording);
 
             return new RecordingCreateResponse(recording.getId(), statusService.getStatus(recording.getId()).name());
 
