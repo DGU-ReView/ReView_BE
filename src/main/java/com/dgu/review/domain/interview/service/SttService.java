@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 
 
@@ -74,7 +75,7 @@ public class SttService {
 
             //statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING);
 
-            statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING);
+            statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING, null);
             log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recording.getId());
             log.info("[status:readback] recordingId={}, now={}", recording.getId(), statusService.getStatus(recording.getId()));
 
@@ -107,11 +108,11 @@ public class SttService {
                 // 결과 텍스트 저장
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
                 // 상태 COMPLETE 저장
-                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED);
+                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED, null);
 
                 String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getId(), recording.getInterviewQuestion().getId());
 
-                statusService.setStatus(recording.getId(), RecordingStatus.FEEDBACK_GENERATED);
+                statusService.setStatus(recording.getId(), RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 
                 InterviewQuestion followUpQuestion = interviewQuestionRepository.save(InterviewQuestion.builder()
                         .question(followUpQuestionText)
@@ -124,13 +125,11 @@ public class SttService {
 
                 //statusService.setStatus(recording.getId(), RecordingStatus.FEEDBACK_GENERATED);
             } else {
-                log.warn("[sttWorker:nonzero-exit] recordingId={} -> UPLOADED, exitCode={}", recording.getId(), exitCode);
-
-                // 실패 → 재시도 가능하도록 다시 UPLOADED 상태로
-                statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
+                // 실패 → failed
+                statusService.setStatus(recording.getId(), RecordingStatus.FAILED, Duration.ofMinutes(30));
             }
         } catch (Exception e) {
-            statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED);
+            statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED, null);
             log.error("STT 워커 실행 실패 recordingId={}", recording.getId(), e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
@@ -191,8 +190,8 @@ public class SttService {
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
         var status = statusService.getStatus(recordingId);
-        var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getSttText() : null;
-        var followUpQuestion = (status == RecordingStatus.FEEDBACK_GENERATED) ? recording.getInterviewQuestion().getFollowUpQuestion().getQuestion() : null;
+        var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
+        var followUpQuestion = (status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getInterviewQuestion().getFollowUpQuestion().getQuestion() : null;
         return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
     }
 

@@ -25,6 +25,12 @@ public enum ErrorCode {
 
 	FOLLOWUP_QUESTION_NOT_FOUND("FOLLOWUP_QUESTION_NOT_FOUND",
 								 HttpStatus.BAD_REQUEST, "해당 질문에 꼬리질문이 존재하지 않습니다."),
+
+	ALREADY_IN_QUEUE_OR_DONE("ALREADY_IN_QUEUE_OR_DONE",
+			HttpStatus.BAD_REQUEST, "해당 녹음이 이미 큐에 존재하거나 처리가 완료되었습니다."),
+
+	RECORDING_ALREADY_PROCESSED("RECORDING_ALREADY_PROCESSED",
+			HttpStatus.BAD_REQUEST, "해당 id에 해당하는 녹음이 이미 처리되었습니다."),
 	;
 	private final String code;
 	private final HttpStatus status;

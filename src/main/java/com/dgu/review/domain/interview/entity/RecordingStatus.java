@@ -4,5 +4,6 @@ public enum RecordingStatus {
     UPLOADED,
     TRANSCRIBING,
     COMPLETED,
-    FEEDBACK_GENERATED
+    FOLLOWUP_GENERATED,
+    FAILED
 }

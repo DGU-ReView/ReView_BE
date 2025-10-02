@@ -8,6 +8,7 @@ import com.dgu.review.domain.interview.dto.response.SttFeedbackResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
+import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -17,6 +18,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 //녹음 등록과 조회를 처리하는 로직
 @Slf4j
@@ -28,14 +31,15 @@ public class InterviewSessionService {
     private final SttService sttService;
     private final RecordingStatusService statusService;
     private final SttFeedbackService sttFeedbackService;
+    private final InterviewQuestionRepository interviewQuestionRepository;
 
     @PersistenceContext
     private EntityManager em; // setter 없이 FK 연결하기 위해 사용
 
     @Transactional
     public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest request) {
-        return enqueueRecordingJob(sessionId, questionId, request);
-        //return sttFeedbackService.generateAiFeedback(sessionId, questionId);
+        Recording saved = saveRecording(sessionId, questionId, request);
+        return enqueueRecordingJob(saved);
     }
     /*
         @Transactional
@@ -71,19 +75,28 @@ public class InterviewSessionService {
 
 
     @Transactional
-    public RecordingCreateResponse enqueueRecordingJob(Long sessionId, Long questionId, RecordingCreateRequest req) {
-        Recording saved = saveRecording(sessionId, questionId, req);
+    public RecordingCreateResponse enqueueRecordingJob(Recording recording) {
 
-        log.info("[enqueue] saved recordingId={}, qId={}, sessionId={}, status=UPLOADED (thread={})",
-                saved.getId(), questionId, sessionId, Thread.currentThread().getName());
-        // 초기 상태 세팅
-        statusService.setStatus(saved.getId(), RecordingStatus.UPLOADED);
-        log.info("[enqueue] dispatch async worker recordingId={}", saved.getId());
-        // STT 비동기 실행
-        //sttService.startSttProcessing(saved.getId(), sessionId, questionId, req);
-        sttService.sttAsyncWorker(saved);
+        var cur = statusService.getStatus(recording.getId());
+        if (cur == RecordingStatus.FAILED || cur == null) {
+            if (cur == RecordingStatus.FAILED) {
+                statusService.clearStatus(recording.getId());
+            }
+            boolean first = statusService.trySetUploadedIfAbsent(recording.getId());
 
-        return new RecordingCreateResponse(saved.getId(), RecordingStatus.UPLOADED.name());
+            if (!first) {
+                throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+            }
+
+            log.info("[enqueue] dispatch async worker recordingId={}", recording.getId());
+            // STT 비동기 실행
+            sttService.sttAsyncWorker(recording);
+
+            return new RecordingCreateResponse(recording.getId(), statusService.getStatus(recording.getId()).name());
+
+        }
+
+        throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
     }
 
 
@@ -97,6 +110,16 @@ public class InterviewSessionService {
         if (!qSessionId.equals(sessionId)) {
             log.warn("질문 세션 불일치. requestSessionId={}, questionSessionId={}", sessionId, qSessionId);
             throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH);
+        }
+        var existingRecording = recordingRepo.findByInterviewQuestion(question);
+        if (existingRecording.isPresent()) {
+            Recording r = existingRecording.get();
+
+            if (r.getSttText() != null && !r.getSttText().isEmpty()) {
+                throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
+            }
+
+            throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
         }
 
         var rec = Recording.builder()
