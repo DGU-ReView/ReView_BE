@@ -28,12 +28,6 @@ public class SttFeedbackService {
 
     @Value("${bedrock.model-id}")
     private String modelId;
-    @Value("${bedrock.max-tokens}")
-    private Integer maxTokens;
-    @Value("${bedrock.temperature}")
-    private Double temperature;
-    @Value("${bedrock.topP}")
-    private Double topP;
 
     public String generateAiFeedback(Long sessionId, Long questionId) {
 
@@ -96,6 +90,7 @@ public class SttFeedbackService {
 
     }
 
+    //아래 주석은 피드백 생성부
 //    // ai 호출부 분리
 //    // 다른
 //    //응답, 함수이름, 요청 바꾸기 api 명세서나 피그마 참고해서

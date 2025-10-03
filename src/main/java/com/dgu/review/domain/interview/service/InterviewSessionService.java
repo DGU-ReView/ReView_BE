@@ -42,38 +42,6 @@ public class InterviewSessionService {
         Recording saved = saveRecording(sessionId, questionId, request);
         return enqueueRecordingJob(saved);
     }
-    /*
-        @Transactional
-    public RecordingManifestCreateResponse create(RecordingManifestCreateRequest req) {
-
-        InterviewQuestion question = em.find(InterviewQuestion.class, req.getInterviewQuestionId());
-        if (question == null) {
-            //예외처리 로직 추가
-            throw new IllegalArgumentException("InterviewQuestion not found with id: " + req.getInterviewQuestionId());
-        }
-
-        Recording rec = Recording.builder()
-                .objectKey(req.getObjectKey()) // 업로드된 음성 파일의 저장 위치
-                .sttText("")                   // nullable=false → 비어있는 문자열로 초기화
-                .interviewQuestion(question)   // FK 연결
-                .build();
-
-        Recording saved = recordingRepo.save(rec); // Recording 엔티티를 DB에 저장
-        return new RecordingManifestCreateResponse(saved.getId(), deriveStatus(saved));
-    }
-     */
-
-/*
-    @Transactional
-    public RecordingManifestDetailResponse get(Long id) {
-        Recording r = recordingRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Recording not found"));
-
-        RecordingStatus status = statusService.getStatus(r.getId());
-        return new RecordingManifestDetailResponse(r.getId(), r.getObjectKey(), status.name());
-    }
- */
-
 
     @Transactional
     public RecordingCreateResponse enqueueRecordingJob(Recording recording) {
@@ -90,7 +58,7 @@ public class InterviewSessionService {
             }
 
             log.info("[enqueue] dispatch async worker recordingId={}", recording.getId());
-            // STT 비동기 실행
+
             recordingJobQueue.enqueue(recording);
 
             return new RecordingCreateResponse(recording.getId(), statusService.getStatus(recording.getId()).name());
@@ -133,6 +101,3 @@ public class InterviewSessionService {
         return recordingRepo.save(rec);
     }
 }
-// 녹음 등록: 요청 DTO를 받아 Recoding entity 생성하고 DB저장 후 응답 DTO 반환
-// 녹음 조회: DB에서 Recoding 찾고 응답 DTO 반환
-// 상태: DB 칼럼만 보고 상태 유추

@@ -35,11 +35,11 @@ public class SttService {
     private final SttFeedbackService sttFeedbackService;
     private final InterviewQuestionRepository interviewQuestionRepository;
 
-    @Value("${stt.worker.base-url}")
-    private String workerBaseUrl;
-
-    @Value("${app.s3.bucket}")
-    private String s3Bucket;
+//    @Value("${stt.worker.base-url}")
+//    private String workerBaseUrl;
+//
+//    @Value("${app.s3.bucket}")
+//    private String s3Bucket;
 
     @Transactional
     public SttStatusResponse startSttProcessing(Long recordingId, Long sessionId, Long questionId, RecordingCreateRequest request) {
@@ -73,8 +73,6 @@ public class SttService {
             log.info("[sttWorker:start] recordingId={}, thread={}, audioKey={}",
                     recording.getId(), Thread.currentThread().getName(), recording.getObjectKey());
 
-            //statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING);
-
             statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING, null);
             log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recording.getId());
             log.info("[status:readback] recordingId={}, now={}", recording.getId(), statusService.getStatus(recording.getId()));
@@ -86,7 +84,6 @@ public class SttService {
             log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}, audioPath={}",
                     recording.getId(), projectRoot, scriptPath, audioPath);
 
-           // log.info("Whisper 프로세스 시작: cmd={}, recordingId={}", command, recordingId);
             ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPath);
             pb.directory(new File(projectRoot));
             pb.redirectErrorStream(true);
@@ -105,9 +102,7 @@ public class SttService {
             log.info("[sttWorker:exit] recordingId={}, exitCode={}, elapsedMs={}", recording.getId(), exitCode, System.currentTimeMillis()-started);
 
             if (exitCode == 0) {
-                // 결과 텍스트 저장
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
-                // 상태 COMPLETE 저장
                 statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED, null);
 
                 String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getId(), recording.getInterviewQuestion().getId());
@@ -123,9 +118,7 @@ public class SttService {
 
                 recording.getInterviewQuestion().attachFollowUp(followUpQuestion);
 
-                //statusService.setStatus(recording.getId(), RecordingStatus.FEEDBACK_GENERATED);
             } else {
-                // 실패 → failed
                 statusService.setStatus(recording.getId(), RecordingStatus.FAILED, Duration.ofMinutes(30));
             }
         } catch (Exception e) {
@@ -160,30 +153,6 @@ public class SttService {
         return new SttJobDetailResponse(status.name(), text, null);
     }
 
-
-
-    //세션 단위 polling: 세션 안의 녹음 조회하고 상태 받아서 리스트 반환하기
-    @Transactional
-    public SessionResultsResponse getSessionResults(Long sessionId) {
-        var recordings = recordingRepo.findAllByInterviewQuestion_InterviewSession_Id(sessionId);
-        if (recordings.isEmpty()) {
-            log.warn("세션에 녹음이 존재하지 않습니다. sessionId={}", sessionId); // 내부 로그
-            throw new ApiException(ErrorCode.SESSION_RECORDINGS_NOT_FOUND);
-        }
-
-        var items = recordings.stream().map(r -> {
-            var status = statusService.getStatus(r.getId());
-            var text   = (status == RecordingStatus.COMPLETED) ? r.getSttText() : null;
-            return new SessionResultsResponse.Item(r.getId(), status, text);
-        }).toList();
-
-        // 집계 규칙 동일
-        // 중복 제거 -> aggregate 메소드 사용
-        String overall = aggregate(items);
-
-        return new SessionResultsResponse(sessionId, overall, items);
-    }
-
     @Transactional
     public RecordingResultsResponse getRecordingResults(Long recordingId) {
         var recording = recordingRepo.findById(recordingId)
@@ -195,25 +164,4 @@ public class SttService {
         return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
     }
 
-    // 전체 상태 집계 규칙: 모든 녹음이 COMPLETE일떄만 COMPLETE고, 하나라도
-    private String aggregate(List<SessionResultsResponse.Item> items) {
-        boolean allComplete = items.stream()
-                .allMatch(i -> i.status() == RecordingStatus.COMPLETED);
-        boolean anyTranscribing = items.stream()
-                .anyMatch(i -> i.status() == RecordingStatus.TRANSCRIBING);
-
-        if (allComplete) return RecordingStatus.COMPLETED.name();
-        if (anyTranscribing) return RecordingStatus.TRANSCRIBING.name();
-        return RecordingStatus.UPLOADED.name();
-    }
-    // 워커에 넘기는 최소 페이로드
-    public record SttWorkerRequest(
-            Long recordingId, String s3Bucket, String objectKey,
-            String lang, String model, boolean diarize
-    ) {}
 }
-
-//enqueue: 녹음 파일을 STT 워커에 보내서 전사 시작 요청
-//complete: 워커가 완료했을 때 결과 반영
-//getDetail: 클라이언트가 조회할 때 상태/결과 반환
-//deriveStatus: 상태
