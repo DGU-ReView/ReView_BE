@@ -3,8 +3,9 @@ package com.dgu.review.domain.interview.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.dgu.review.domain.interview.dto.PresignRecordUploadRequest;
-import com.dgu.review.domain.interview.dto.PresignUploadResponse;
+import com.dgu.review.domain.interview.dto.PresignRecordingUploadRequest;
+import com.dgu.review.domain.interview.dto.PresignRecordingUploadResponse;
+import com.dgu.review.domain.interview.dto.PresignResumeUploadResponse;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -19,6 +20,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -29,7 +31,7 @@ public class InterviewUploadService {
  private String bucket;
  private final InterviewQuestionRepository interviewQuestionRepository;
 
- public PresignUploadResponse createRecordPutUrl(PresignRecordUploadRequest req, Long userId) {
+ public PresignRecordingUploadResponse createRecordingPutUrl(PresignRecordingUploadRequest req, Long userId) {
      // questionid가 실제 db에 있는지 검증 
 	 if(!interviewQuestionRepository.existsById(req.questionId())) {
 		 throw new ApiException(ErrorCode.Question_NOT_FOUND);
@@ -64,16 +66,16 @@ public class InterviewUploadService {
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", req.contentType());
 
-     return new PresignUploadResponse(
+     return new PresignRecordingUploadResponse(
              url.toString(),
              key,
              headers
      );
  }
 
- public PresignUploadResponse createResumePutUrl(Long userId, String fileName) {
-     ////////////////// userid에 대한 자소서가 있는지 검증 
-	 
+ public PresignResumeUploadResponse createResumePutUrl(Long userId, String fileName) {
+	 // 랜덤으로 resumeId 생성 
+	 String resumeId = UUID.randomUUID().toString();  
 	 
 	 // url 유효시간 10분 
 	 long expiryMinutes=10;
@@ -87,7 +89,7 @@ public class InterviewUploadService {
 	    if (contentType == null) {
 	        throw new ApiException(ErrorCode.RESUME_UNSUPPORTED_MEDIA_TYPE);
 	    }
-     String key = "resume/%d.%s".formatted(userId,ext);
+     String key = "resume/%d/%d.%s".formatted(userId,resumeId,ext);
 
      PutObjectRequest put = PutObjectRequest.builder()
              .bucket(bucket)
@@ -107,10 +109,11 @@ public class InterviewUploadService {
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", contentType);
 
-     return new PresignUploadResponse(
+     return new PresignResumeUploadResponse(
              url.toString(),
              key,
-             headers
+             headers,
+             resumeId
      );
  }
 

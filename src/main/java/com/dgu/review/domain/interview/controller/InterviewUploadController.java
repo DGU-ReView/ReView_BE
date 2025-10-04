@@ -9,8 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dgu.review.domain.interview.dto.PresignRecordUploadRequest;
-import com.dgu.review.domain.interview.dto.PresignUploadResponse;
+import com.dgu.review.domain.interview.dto.PresignRecordingUploadRequest;
+import com.dgu.review.domain.interview.dto.PresignRecordingUploadResponse;
+import com.dgu.review.domain.interview.dto.PresignResumeUploadResponse;
 import com.dgu.review.domain.interview.service.InterviewUploadService;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -22,24 +23,24 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 @RequestMapping("/api/uploads")
 public class InterviewUploadController {
 
- private final InterviewUploadService service;
+ private final InterviewUploadService interviewUploadService;
 
  @PostMapping("/recording")
- public ResponseEntity<PresignUploadResponse> presignRecordPutUrl(
-         @Valid @RequestBody PresignRecordUploadRequest req
+ public ResponseEntity<PresignRecordingUploadResponse> presignRecordPutUrl(
+         @Valid @RequestBody PresignRecordingUploadRequest req
  ) {
      // 목 userId
      Long userId = 123L; 
 
-     PresignUploadResponse res = service.createRecordPutUrl(req, userId);
+     PresignRecordingUploadResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
      return ResponseEntity.ok(res);
  }
  
  @PostMapping("/resume")
- public ResponseEntity<PresignUploadResponse> presignResumePutUrl(@RequestParam String fileName) {
+ public ResponseEntity<PresignResumeUploadResponse> presignResumePutUrl(@RequestParam(name = "fileName", required = true) String fileName) {
      // 목 userId
      Long mocuserId = 123L; 
-     PresignUploadResponse res = service.createResumePutUrl(mocuserId, fileName);
+     PresignResumeUploadResponse res = interviewUploadService.createResumePutUrl(mocuserId, fileName);
      return ResponseEntity.ok(res);
  }
 }

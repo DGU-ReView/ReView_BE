@@ -29,6 +29,6 @@ stt:
 
 app:
   s3:
-    bucket: {AWS_S3_BUCKET}         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
+    bucket: ${AWS_S3_BUCKET}         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
 aws:
   region: ap-northeast-2
