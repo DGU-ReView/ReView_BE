@@ -9,6 +9,7 @@ import com.dgu.review.domain.user.repository.UserRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
@@ -16,6 +17,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.*;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SttFeedbackService {
@@ -81,7 +83,8 @@ public class SttFeedbackService {
         String stopReason = resp.stopReasonAsString();
         boolean truncated = "length".equalsIgnoreCase(stopReason);
 
-        // 위 값들 로그에 추가
+        log.info("[Bedrock] questionId={} promptTokens={} completionTokens={} stopReason={} truncated={}",
+                questionId, promptTokens, completionTokens, stopReason, truncated);
 
         return respText;
 
