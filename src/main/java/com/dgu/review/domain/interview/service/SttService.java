@@ -31,7 +31,7 @@ public class SttService {
 
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
-    private final RestTemplate restTemplate = new RestTemplate();
+//    private final RestTemplate restTemplate = new RestTemplate();
     private final SttFeedbackService sttFeedbackService;
     private final InterviewQuestionRepository interviewQuestionRepository;
 
@@ -40,27 +40,6 @@ public class SttService {
 //
 //    @Value("${app.s3.bucket}")
 //    private String s3Bucket;
-
-    @Transactional
-    public SttStatusResponse startSttProcessing(Long recordingId, Long sessionId, Long questionId, RecordingCreateRequest request) {
-//        Recording r = recordingRepo.findById(recordingId)
-//                .orElseThrow(() -> {
-//                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
-//                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
-//                });
-
-        RecordingStatus current = statusService.getStatus(recordingId);
-        if (current == RecordingStatus.TRANSCRIBING || current == RecordingStatus.COMPLETED) {
-            return new SttStatusResponse(current.name());
-        }
-
-        //statusService.setStatus(r.getId(), RecordingStatus.TRANSCRIBING);
-        //sttAsyncWorker(r); // 비동기
-
-        return new SttStatusResponse(RecordingStatus.TRANSCRIBING.name());
-    }
-
-
 
     /**
      * Whisper large-v3를 실행하는 비동기 워커
@@ -126,31 +105,6 @@ public class SttService {
             log.error("STT 워커 실행 실패 recordingId={}", recording.getId(), e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
-    }
-
-
-    @Transactional
-    public void complete(Long recordingId, String transcript) {
-        // 워커 완료 콜백에서 최종 텍스트 반영
-        int updated = recordingRepo.updateSttTextById(recordingId, transcript == null ? "" : transcript);
-        if (updated == 0) {
-            log.warn("완료 처리 대상 녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
-            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND);
-        }
-
-    }
-
-    @Transactional
-    public SttJobDetailResponse getDetail(Long recordingId) {
-        Recording r = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> {
-                    log.warn("녹음을 찾을 수 없습니다. recordingId={}", recordingId); // 내부 로그
-                    return new ApiException(ErrorCode.RECORDING_NOT_FOUND);
-                });
-        RecordingStatus status = statusService.getStatus(recordingId);
-        String text = status == RecordingStatus.COMPLETED ? r.getSttText() : null;
-
-        return new SttJobDetailResponse(status.name(), text, null);
     }
 
     @Transactional

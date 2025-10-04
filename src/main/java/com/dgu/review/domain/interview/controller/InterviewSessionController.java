@@ -1,9 +1,3 @@
-// 녹음 파일 접수 api
-/*
-client가 S3에 음성 파일을 올려두고 그 키를 백엔드에 알려주면
-DB에 레코드 행을 만들어줌.
- */
-
 package com.dgu.review.domain.interview.controller;
 
 import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;

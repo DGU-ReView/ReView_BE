@@ -11,7 +11,6 @@ import java.util.Optional;
 
 public interface RecordingRepository extends JpaRepository<Recording, Long> {
 
-    // setter 없이 sttText만 업데이트
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update Recording r set r.sttText = :text where r.id = :id")
     int updateSttTextById(@Param("id") Long id, @Param("text") String text);

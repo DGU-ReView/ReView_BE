@@ -35,7 +35,7 @@ public class InterviewSessionService {
     private final RecordingJobQueue recordingJobQueue;
 
     @PersistenceContext
-    private EntityManager em; // setter 없이 FK 연결하기 위해 사용
+    private EntityManager em;
 
     @Transactional
     public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest request) {
