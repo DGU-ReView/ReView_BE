@@ -34,7 +34,7 @@ public class SttService {
     @Value("${stt.worker.base-url}")
     private String workerBaseUrl;
 
-    @Value("${app.s3.bucket}")
+    @Value("${aws.s3.bucket}")
     private String s3Bucket;
 
     @Transactional

@@ -27,7 +27,7 @@ import java.util.UUID;
 public class InterviewUploadService {
 
  private final S3Presigner presigner;
- @Value("${app.s3.bucket}")
+ @Value("${aws.s3.bucket}")
  private String bucket;
  private final InterviewQuestionRepository interviewQuestionRepository;
 
@@ -89,7 +89,7 @@ public class InterviewUploadService {
 	    if (contentType == null) {
 	        throw new ApiException(ErrorCode.RESUME_UNSUPPORTED_MEDIA_TYPE);
 	    }
-     String key = "resume/%d/%d.%s".formatted(userId,resumeId,ext);
+     String key = "resume/%d/%s.%s".formatted(userId,resumeId,ext);
 
      PutObjectRequest put = PutObjectRequest.builder()
              .bucket(bucket)

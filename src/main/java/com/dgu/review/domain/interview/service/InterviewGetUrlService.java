@@ -23,7 +23,7 @@ public class InterviewGetUrlService {
 
     // 자소서 GET presigned URL 
     public String createResumeGetUrl(Long userId, String resumeId, String ext) {
-        String key = "resume/%d/%d.%s".formatted(userId,resumeId,ext);
+        String key = "resume/%d/%s.%s".formatted(userId,resumeId,ext);
 
         // 10분 유효
         long expiryMinutes = 10;

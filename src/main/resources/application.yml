@@ -27,8 +27,7 @@ stt:
   worker:
     base-url: http://localhost:8081   # 기본값/ 배포할때 EC2/Lambda 주소로 바꾸면 됨
 
-app:
+aws:
   s3:
     bucket: ${AWS_S3_BUCKET}         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
-aws:
   region: ap-northeast-2
