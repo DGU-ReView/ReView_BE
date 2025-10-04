@@ -1,14 +1,10 @@
 package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
-import com.dgu.review.domain.interview.dto.response.GetFollowUpQuestionResponse;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
-//import com.dgu.review.domain.interview.dto.RecordingManifestDetailResponse;
-import com.dgu.review.domain.interview.dto.response.SttFeedbackResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
-import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -19,19 +15,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
-//녹음 등록과 조회를 처리하는 로직
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class InterviewSessionService {
+public class RecordingService {
 
-    private final RecordingRepository recordingRepo; //DB에 Recording 엔티티를 저장/조회하는 JPA
-    private final SttService sttService;
+    private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
-    private final SttFeedbackService sttFeedbackService;
-    private final InterviewQuestionRepository interviewQuestionRepository;
     private final RecordingJobQueue recordingJobQueue;
 
     @PersistenceContext
