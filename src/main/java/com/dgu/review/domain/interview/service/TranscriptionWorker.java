@@ -1,33 +1,26 @@
 package com.dgu.review.domain.interview.service;
 
-import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
-import com.dgu.review.domain.interview.dto.response.*;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
-import com.dgu.review.global.exception.ApiException;
-import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
 
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SttService {
+public class TranscriptionWorker {
 
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
