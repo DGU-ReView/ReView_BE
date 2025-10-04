@@ -38,8 +38,8 @@ public class InterviewSessionService {
     private EntityManager em;
 
     @Transactional
-    public RecordingCreateResponse createAndTranscribe(Long sessionId, Long questionId, RecordingCreateRequest request) {
-        Recording saved = saveRecording(sessionId, questionId, request);
+    public RecordingCreateResponse createAndTranscribe(Long questionId, RecordingCreateRequest request) {
+        Recording saved = saveRecording(questionId, request);
         return enqueueRecordingJob(saved);
     }
 
@@ -69,17 +69,13 @@ public class InterviewSessionService {
     }
 
 
-    private Recording saveRecording(Long sessionId, Long questionId, RecordingCreateRequest req) {
+    private Recording saveRecording(Long questionId, RecordingCreateRequest req) {
         var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
             log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", questionId);
             throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND);
         }
-        var qSessionId = question.getInterviewSession().getId();
-        if (!qSessionId.equals(sessionId)) {
-            log.warn("질문 세션 불일치. requestSessionId={}, questionSessionId={}", sessionId, qSessionId);
-            throw new ApiException(ErrorCode.INTERVIEW_SESSION_MISMATCH);
-        }
+
         var existingRecording = recordingRepo.findByInterviewQuestion(question);
         if (existingRecording.isPresent()) {
             Recording r = existingRecording.get();

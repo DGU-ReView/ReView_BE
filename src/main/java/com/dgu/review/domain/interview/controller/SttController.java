@@ -16,10 +16,6 @@ public class SttController {
 
     private final SttService sttService;
 
-    @GetMapping("/{recordingId}/results")
-    public ResponseEntity<ApiResponse<RecordingResultsResponse>> getRecordingStatus(@PathVariable Long recordingId) {
-        var res = sttService.getRecordingResults(recordingId);
-        return ResponseEntity.ok(ApiResponse.ok(res));
-    }
+
 
 }
