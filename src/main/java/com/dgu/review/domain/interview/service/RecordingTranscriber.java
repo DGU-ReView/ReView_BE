@@ -20,7 +20,7 @@ import java.time.Duration;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class TranscriptionWorker {
+public class RecordingTranscriber {
 
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
@@ -77,7 +77,7 @@ public class TranscriptionWorker {
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
                 statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED, null);
 
-                String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getId(), recording.getInterviewQuestion().getId());
+                String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getInterviewQuestion().getId());
 
                 statusService.setStatus(recording.getId(), RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 

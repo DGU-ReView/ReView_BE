@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class InMemoryRecordingJobQueue implements RecordingJobQueue {
 
-    private final TranscriptionWorker transcriptionWorker;
+    private final RecordingTranscriber recordingTranscriber;
 
     @Override
     public void enqueue(Recording recording) {
-        transcriptionWorker.sttAsyncWorker(recording);
+        recordingTranscriber.sttAsyncWorker(recording);
     }
 }

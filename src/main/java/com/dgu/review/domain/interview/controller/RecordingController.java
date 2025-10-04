@@ -5,7 +5,7 @@ import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.service.RecordingCommandService;
 import com.dgu.review.domain.interview.service.RecordingQueryService;
-import com.dgu.review.domain.interview.service.TranscriptionWorker;
+import com.dgu.review.domain.interview.service.RecordingTranscriber;
 import com.dgu.review.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class RecordingController {
 
     private final RecordingCommandService recordingCommandService;
-    private final TranscriptionWorker transcriptionWorker;
+    private final RecordingTranscriber recordingTranscriber;
     private final RecordingQueryService recordingQueryService;
 
     @PostMapping("/questions/{questionId}/recordings")
