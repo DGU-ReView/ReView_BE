@@ -6,6 +6,8 @@ public record RecordingResultsResponse (
         Long recordingId,
         RecordingStatus status,
         String sttText,
-        String followUpQuestion
+        String followUpQuestion,
+        boolean followUpDone,
+        ContextStatus sessionStatus
 ){
 }

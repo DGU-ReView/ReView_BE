@@ -1,6 +1,8 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.dto.response.ContextStatus;
 import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
+import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
@@ -25,8 +27,30 @@ public class RecordingQueryService {
 
         var status = statusService.getStatus(recordingId);
         var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
-        var followUpQuestion = (status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getInterviewQuestion().getFollowUpQuestion().getQuestion() : null;
-        return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
+        var question = recording.getInterviewQuestion().getFollowUpQuestion();
+        String followUpQuestion =
+                (status == RecordingStatus.FOLLOWUP_GENERATED && question != null)
+                        ? question.getQuestion()
+                        : null;
+
+        boolean followUpDone =
+                "추가 질문이 필요하지 않습니다.".equals(followUpQuestion);
+
+        return new RecordingResultsResponse(recordingId, status, text, followUpQuestion, followUpDone,
+                new ContextStatus(
+                        recording.getInterviewQuestion().getInterviewSession().getId(), (isFourthRootQuestion(question) && followUpDone)
+                ));
+    }
+
+    private boolean isFourthRootQuestion(InterviewQuestion question) {
+        if (question == null) return false;
+
+        InterviewQuestion current = question;
+        while (current.getParentQuestion() != null) {
+            current = current.getParentQuestion();
+        }
+
+        return current.getQuestionNumber() == 4;
     }
 
 }
