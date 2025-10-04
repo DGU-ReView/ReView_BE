@@ -107,15 +107,4 @@ public class SttService {
         }
     }
 
-    @Transactional
-    public RecordingResultsResponse getRecordingResults(Long recordingId) {
-        var recording = recordingRepo.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
-
-        var status = statusService.getStatus(recordingId);
-        var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
-        var followUpQuestion = (status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getInterviewQuestion().getFollowUpQuestion().getQuestion() : null;
-        return new RecordingResultsResponse(recordingId, status, text, followUpQuestion);
-    }
-
 }
