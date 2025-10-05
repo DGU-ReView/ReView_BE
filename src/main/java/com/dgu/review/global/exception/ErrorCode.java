@@ -23,7 +23,7 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다."),
     
 	// 질문 없음
-	Question_NOT_FOUND("Question_NOT_FOUND",
+	QUESTION_NOT_FOUND("QUESTION_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "해당 질문이 존재하지 않습니다."),
 	// 질문의 소유자가 아님 
 	FORBIDDEN_RESOURCE("FORBIDDEN_RESOURCE", 

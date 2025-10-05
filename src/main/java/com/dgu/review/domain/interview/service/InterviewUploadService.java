@@ -34,7 +34,7 @@ public class InterviewUploadService {
  public PresignRecordingUploadResponse createRecordingPutUrl(PresignRecordingUploadRequest req, Long userId) {
      // questionid가 실제 db에 있는지 검증 
 	 if(!interviewQuestionRepository.existsById(req.questionId())) {
-		 throw new ApiException(ErrorCode.Question_NOT_FOUND);
+		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
 	 };
 	 // questionid가 user의 소유가 맞는지 검증 
 	 if (!interviewQuestionRepository.existsByIdAndInterviewSession_User_Id(req.questionId(), userId)) {
