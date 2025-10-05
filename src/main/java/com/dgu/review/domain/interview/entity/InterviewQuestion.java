@@ -28,6 +28,10 @@ public class InterviewQuestion extends BaseEntity {
     @Column(nullable = false, columnDefinition = "text")
     private String question;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean followUpDone = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_session_id", nullable = false)
     private InterviewSession interviewSession;
