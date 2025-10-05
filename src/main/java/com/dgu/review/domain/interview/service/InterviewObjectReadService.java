@@ -1,69 +1,36 @@
 package com.dgu.review.domain.interview.service;
 
-import java.net.URL;
-import java.time.Duration;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 
 import lombok.RequiredArgsConstructor;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+
 
 @Service
 @RequiredArgsConstructor
-public class InterviewGetUrlService {
+public class InterviewObjectReadService {
 
-    private final S3Presigner presigner;
+    private final S3Client s3;
+
     @Value("${aws.s3.bucket}")
     private String bucket;
 
-    // 자소서 GET presigned URL 
-    public String createResumeGetUrl(Long userId, String resumeId, String ext) {
-        String key = "resume/%d/%s.%s".formatted(userId,resumeId,ext);
-
-        // 10분 유효
-        long expiryMinutes = 10;
-
-        GetObjectRequest get = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presign = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(expiryMinutes))
-                .getObjectRequest(get)
-                .build();
-
-        PresignedGetObjectRequest signed = presigner.presignGetObject(presign);
-        URL url = signed.url();
-
-        return url.toString();
+    // 자소서 InputStream 반환 (호출자가 닫아야 함)
+    public ResponseInputStream<GetObjectResponse> openResume(Long userId, String resumeId, String ext) {
+        String key = "resume/%d/%s.%s".formatted(userId, resumeId, ext);
+        return s3.getObject(b -> b.bucket(bucket).key(key));
     }
 
- // 녹음 GET presigned URL
-    public String createRecordingGetUrl(Long userId, Long questionId, String ext) {
-        String key = "recording/%d/%d.%s".formatted(userId,questionId, ext);
-
-        long expiryMinutes = 10;
-
-        GetObjectRequest get = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presign = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(expiryMinutes))
-                .getObjectRequest(get)
-                .build();
-
-        PresignedGetObjectRequest signed = presigner.presignGetObject(presign);
-        URL url = signed.url();
-
-        return url.toString();
-
+    // 녹음 InputStream 반환
+    public ResponseInputStream<GetObjectResponse> openRecording(Long userId, Long questionId, String ext) {
+        String key = "recording/%d/%d.%s".formatted(userId, questionId, ext);
+        return s3.getObject(b -> b.bucket(bucket).key(key));
     }
+
+  
 }
+
