@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Optional;
 
 
 @Slf4j
@@ -77,18 +78,20 @@ public class RecordingTranscriber {
                 recordingRepo.updateSttTextById(recording.getId(), output.toString());
                 statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED, null);
 
-                String followUpQuestionText = sttFeedbackService.generateAiFeedback(recording.getInterviewQuestion().getId());
+                String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
+
+                Optional.ofNullable(followUpQuestionText)
+                        .filter(text -> !"추가 질문이 필요하지 않습니다.".equals(text))
+                        .map(text -> interviewQuestionRepository.save(
+                                InterviewQuestion.builder()
+                                        .question(text)
+                                        .interviewSession(recording.getInterviewQuestion().getInterviewSession())
+                                        .parentQuestion(recording.getInterviewQuestion())
+                                        .build()
+                        ))
+                        .ifPresent(recording.getInterviewQuestion()::attachFollowUp);
 
                 statusService.setStatus(recording.getId(), RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
-
-                InterviewQuestion followUpQuestion = interviewQuestionRepository.save(InterviewQuestion.builder()
-                        .question(followUpQuestionText)
-                        .interviewSession(recording.getInterviewQuestion().getInterviewSession())
-                        .parentQuestion(recording.getInterviewQuestion())
-                        .build()
-                );
-
-                recording.getInterviewQuestion().attachFollowUp(followUpQuestion);
 
             } else {
                 statusService.setStatus(recording.getId(), RecordingStatus.FAILED, Duration.ofMinutes(30));

@@ -27,18 +27,26 @@ public class RecordingQueryService {
 
         var status = statusService.getStatus(recordingId);
         var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
-        var question = recording.getInterviewQuestion().getFollowUpQuestion();
+        var savedFollowUp = recording.getInterviewQuestion().getFollowUpQuestion();
+
         String followUpQuestion =
-                (status == RecordingStatus.FOLLOWUP_GENERATED && question != null)
-                        ? question.getQuestion()
+                (status == RecordingStatus.FOLLOWUP_GENERATED)
+                        ? (savedFollowUp != null ? savedFollowUp.getQuestion() : "추가 질문이 필요하지 않습니다.")
                         : null;
 
         boolean followUpDone =
-                "추가 질문이 필요하지 않습니다.".equals(followUpQuestion);
+                (status == RecordingStatus.FOLLOWUP_GENERATED)
+                    && ("추가 질문이 필요하지 않습니다.".equals(followUpQuestion) || savedFollowUp != null);
 
-        return new RecordingResultsResponse(recordingId, status, text, followUpQuestion, followUpDone,
+        return new RecordingResultsResponse(
+                recordingId,
+                status,
+                text,
+                followUpQuestion,
+                followUpDone,
                 new ContextStatus(
-                        recording.getInterviewQuestion().getInterviewSession().getId(), (isFourthRootQuestion(question) && followUpDone)
+                        recording.getInterviewQuestion().getInterviewSession().getId(),
+                        (isFourthRootQuestion(recording.getInterviewQuestion()) && followUpDone)
                 ));
     }
 
