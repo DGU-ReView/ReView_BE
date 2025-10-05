@@ -37,7 +37,7 @@ public class InterviewPresignService {
 		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
 	 };
 	 // questionid가 user의 소유가 맞는지 검증 
-	 if (!interviewQuestionRepository.existsByIdAndInterviewSession_User_Id(req.questionId(), userId)) {
+	 if (!interviewQuestionRepository.existsByIdAndInterviewSessionUserId(req.questionId(), userId)) {
          throw new ApiException(ErrorCode.FORBIDDEN_RESOURCE);
      }
 	 
