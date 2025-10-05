@@ -33,7 +33,19 @@ public enum ErrorCode {
 		    HttpStatus.BAD_REQUEST, "파일 확장자를 인식할 수 없습니다. pdf 또는 docx 파일을 올려주세요."),
 	// 지원하지 않는 파일 형식 
 	RESUME_UNSUPPORTED_MEDIA_TYPE( "RESUME_UNSUPPORTED_MEDIA_TYPE",
-			HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 파일 형식입니다.");
+			HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 파일 형식입니다."),
+	// 저장소에서 자소서 찾을 수 없음 
+	STORAGE_RESUME_NOT_FOUND( "STORAGE_RESUME_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "저장소에서 해당 자소서를 찾을 수 없습니다. "),
+	// 저장소에서 녹음 찾을 수 없음
+	STORAGE_RECORDING_NOT_FOUND( "STORAGE_RECORDING_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "저장소에서 해당 녹음 찾을 수 없습니다."),
+	FORBIDDEN_STORAGE("FORBIDDEN_STORAGE", 
+			HttpStatus.FORBIDDEN, "해당 저장소에 접근 권한이 없습니다."),
+	// 저장소에서 자소서 찾을 수 없음
+	STORAGE_UNAVAILABLE( "STORAGE_UNAVAILABLE",
+			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. ");
+	
 	
 	private final String code;
 	private final HttpStatus status;
