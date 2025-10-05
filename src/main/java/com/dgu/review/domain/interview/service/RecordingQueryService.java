@@ -36,7 +36,7 @@ public class RecordingQueryService {
 
         boolean followUpDone =
                 (status == RecordingStatus.FOLLOWUP_GENERATED)
-                    && ("추가 질문이 필요하지 않습니다.".equals(followUpQuestion) || savedFollowUp != null);
+                    && ("추가 질문이 필요하지 않습니다.".equals(followUpQuestion) || savedFollowUp == null);
 
         return new RecordingResultsResponse(
                 recordingId,
