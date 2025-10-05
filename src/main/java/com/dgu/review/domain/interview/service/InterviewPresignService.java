@@ -3,9 +3,9 @@ package com.dgu.review.domain.interview.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.dgu.review.domain.interview.dto.PresignRecordingUploadRequest;
-import com.dgu.review.domain.interview.dto.PresignRecordingUploadResponse;
-import com.dgu.review.domain.interview.dto.PresignResumeUploadResponse;
+import com.dgu.review.domain.interview.dto.RecordingUploadUrlRequest;
+import com.dgu.review.domain.interview.dto.RecordingUploadUrlResponse;
+import com.dgu.review.domain.interview.dto.ResumeUploadUrlResponse;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -24,14 +24,14 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
-public class InterviewUploadService {
+public class InterviewPresignService {
 
  private final S3Presigner presigner;
  @Value("${aws.s3.bucket}")
  private String bucket;
  private final InterviewQuestionRepository interviewQuestionRepository;
 
- public PresignRecordingUploadResponse createRecordingPutUrl(PresignRecordingUploadRequest req, Long userId) {
+ public RecordingUploadUrlResponse createRecordingPutUrl(RecordingUploadUrlRequest req, Long userId) {
      // questionid가 실제 db에 있는지 검증 
 	 if(!interviewQuestionRepository.existsById(req.questionId())) {
 		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
@@ -66,14 +66,14 @@ public class InterviewUploadService {
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", req.contentType());
 
-     return new PresignRecordingUploadResponse(
+     return new RecordingUploadUrlResponse(
              url.toString(),
              key,
              headers
      );
  }
 
- public PresignResumeUploadResponse createResumePutUrl(Long userId, String fileName) {
+ public ResumeUploadUrlResponse createResumePutUrl(Long userId, String fileName) {
 	 // 랜덤으로 resumeId 생성 
 	 String resumeId = UUID.randomUUID().toString();  
 	 
@@ -109,7 +109,7 @@ public class InterviewUploadService {
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", contentType);
 
-     return new PresignResumeUploadResponse(
+     return new ResumeUploadUrlResponse(
              url.toString(),
              key,
              headers,

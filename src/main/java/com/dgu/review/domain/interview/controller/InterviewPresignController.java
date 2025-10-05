@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dgu.review.domain.interview.dto.PresignRecordingUploadRequest;
-import com.dgu.review.domain.interview.dto.PresignRecordingUploadResponse;
-import com.dgu.review.domain.interview.dto.PresignResumeUploadResponse;
-import com.dgu.review.domain.interview.service.InterviewUploadService;
+import com.dgu.review.domain.interview.dto.RecordingUploadUrlRequest;
+import com.dgu.review.domain.interview.dto.RecordingUploadUrlResponse;
+import com.dgu.review.domain.interview.dto.ResumeUploadUrlResponse;
+import com.dgu.review.domain.interview.service.InterviewPresignService;
+
 
 
 
@@ -23,24 +24,24 @@ import com.dgu.review.domain.interview.service.InterviewUploadService;
 @RequestMapping("/api/presign")
 public class InterviewPresignController {
 
- private final InterviewUploadService interviewUploadService;
+ private final InterviewPresignService interviewUploadService;
 
  @PostMapping("/recording")
- public ResponseEntity<PresignRecordingUploadResponse> presignRecordPutUrl(
-         @Valid @RequestBody PresignRecordingUploadRequest req
+ public ResponseEntity<RecordingUploadUrlResponse> presignRecordPutUrl(
+         @Valid @RequestBody RecordingUploadUrlRequest req
  ) {
      // 목 userId
      Long userId = 123L; 
 
-     PresignRecordingUploadResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
+     RecordingUploadUrlResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
      return ResponseEntity.ok(res);
  }
  
  @PostMapping("/resume")
- public ResponseEntity<PresignResumeUploadResponse> presignResumePutUrl(@RequestParam(name = "fileName", required = true) String fileName) {
+ public ResponseEntity<ResumeUploadUrlResponse> presignResumePutUrl(@RequestParam(name = "fileName", required = true) String fileName) {
      // 목 userId
      Long mocuserId = 123L; 
-     PresignResumeUploadResponse res = interviewUploadService.createResumePutUrl(mocuserId, fileName);
+     ResumeUploadUrlResponse res = interviewUploadService.createResumePutUrl(mocuserId, fileName);
      return ResponseEntity.ok(res);
  }
 }
