@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,14 +15,13 @@ import com.dgu.review.domain.interview.dto.PresignRecordingUploadResponse;
 import com.dgu.review.domain.interview.dto.PresignResumeUploadResponse;
 import com.dgu.review.domain.interview.service.InterviewUploadService;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/uploads")
-public class InterviewUploadController {
+@RequestMapping("/api/presign")
+public class InterviewPresignController {
 
  private final InterviewUploadService interviewUploadService;
 
