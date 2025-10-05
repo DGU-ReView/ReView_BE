@@ -3,5 +3,5 @@ package com.dgu.review.domain.interview.service;
 import com.dgu.review.domain.interview.entity.Recording;
 
 public interface RecordingJobQueue {
-    void enqueue(Recording recording);
+    void enqueue(Long recordingId);
 }

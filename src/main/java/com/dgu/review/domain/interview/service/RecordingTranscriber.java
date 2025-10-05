@@ -5,6 +5,8 @@ import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
+import com.dgu.review.global.exception.ApiException;
+import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -40,22 +42,26 @@ public class RecordingTranscriber {
      */
     @Transactional
     @Async
-    public void sttAsyncWorker(Recording recording) {
+    public void sttAsyncWorker(Long recordingId) {
         try {
+
+            Recording recording = recordingRepo.findById(recordingId)
+                    .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
             long started = System.currentTimeMillis();
             log.info("[sttWorker:start] recordingId={}, thread={}, audioKey={}",
-                    recording.getId(), Thread.currentThread().getName(), recording.getObjectKey());
+                    recordingId, Thread.currentThread().getName(), recording.getObjectKey());
 
-            statusService.setStatus(recording.getId(), RecordingStatus.TRANSCRIBING, null);
-            log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recording.getId());
-            log.info("[status:readback] recordingId={}, now={}", recording.getId(), statusService.getStatus(recording.getId()));
+            statusService.setStatus(recordingId, RecordingStatus.TRANSCRIBING, null);
+            log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recordingId);
+            log.info("[status:readback] recordingId={}, now={}", recordingId, statusService.getStatus(recordingId));
 
             String projectRoot = System.getProperty("user.dir");
             String audioPath = projectRoot + File.separator + "audio_files" + File.separator + recording.getObjectKey();
             String scriptPath = projectRoot + File.separator + "stt_worker" + File.separator + "transcribe.py";
 
             log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}, audioPath={}",
-                    recording.getId(), projectRoot, scriptPath, audioPath);
+                    recordingId, projectRoot, scriptPath, audioPath);
 
             ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPath);
             pb.directory(new File(projectRoot));
@@ -64,7 +70,7 @@ public class RecordingTranscriber {
 
             Process process = pb.start();
             log.info("[sttWorker:proc] recordingId={} processStarted (thread={})",
-                    recording.getId(), Thread.currentThread().getName());
+                    recordingId, Thread.currentThread().getName());
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
             StringBuilder output = new StringBuilder();
             String line;
@@ -72,11 +78,11 @@ public class RecordingTranscriber {
                 output.append(line);
             }
             int exitCode = process.waitFor();
-            log.info("[sttWorker:exit] recordingId={}, exitCode={}, elapsedMs={}", recording.getId(), exitCode, System.currentTimeMillis()-started);
+            log.info("[sttWorker:exit] recordingId={}, exitCode={}, elapsedMs={}", recordingId, exitCode, System.currentTimeMillis()-started);
 
             if (exitCode == 0) {
-                recordingRepo.updateSttTextById(recording.getId(), output.toString());
-                statusService.setStatus(recording.getId(), RecordingStatus.COMPLETED, null);
+                recording.attachSttText(output.toString());
+                statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
 
                 String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
 
@@ -91,14 +97,14 @@ public class RecordingTranscriber {
                         ))
                         .ifPresent(recording.getInterviewQuestion()::attachFollowUp);
 
-                statusService.setStatus(recording.getId(), RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
+                statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 
             } else {
-                statusService.setStatus(recording.getId(), RecordingStatus.FAILED, Duration.ofMinutes(30));
+                statusService.setStatus(recordingId, RecordingStatus.FAILED, Duration.ofMinutes(30));
             }
         } catch (Exception e) {
-            statusService.setStatus(recording.getId(), RecordingStatus.UPLOADED, null);
-            log.error("STT 워커 실행 실패 recordingId={}", recording.getId(), e); // 내부 로그
+            statusService.setStatus(recordingId, RecordingStatus.UPLOADED, null);
+            log.error("STT 워커 실행 실패 recordingId={}", recordingId, e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
     }

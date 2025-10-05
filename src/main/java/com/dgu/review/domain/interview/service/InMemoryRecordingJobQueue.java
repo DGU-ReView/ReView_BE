@@ -13,7 +13,7 @@ public class InMemoryRecordingJobQueue implements RecordingJobQueue {
     private final RecordingTranscriber recordingTranscriber;
 
     @Override
-    public void enqueue(Recording recording) {
-        recordingTranscriber.sttAsyncWorker(recording);
+    public void enqueue(Long recordingId) {
+        recordingTranscriber.sttAsyncWorker(recordingId);
     }
 }

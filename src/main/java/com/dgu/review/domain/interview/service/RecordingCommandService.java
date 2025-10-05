@@ -14,6 +14,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationAdapter;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
 @Service
@@ -30,28 +33,32 @@ public class RecordingCommandService {
     @Transactional
     public RecordingCreateResponse createAndTranscribe(Long questionId, RecordingCreateRequest request) {
         Recording saved = saveRecording(questionId, request);
-        return enqueueRecordingJob(saved);
+        return enqueueRecordingJob(saved.getId());
     }
 
     @Transactional
-    public RecordingCreateResponse enqueueRecordingJob(Recording recording) {
+    public RecordingCreateResponse enqueueRecordingJob(Long recordingId) {
 
-        var cur = statusService.getStatus(recording.getId());
+        var cur = statusService.getStatus(recordingId);
         if (cur == RecordingStatus.FAILED || cur == null) {
             if (cur == RecordingStatus.FAILED) {
-                statusService.clearStatus(recording.getId());
+                statusService.clearStatus(recordingId);
             }
-            boolean first = statusService.trySetUploadedIfAbsent(recording.getId());
+            boolean first = statusService.trySetUploadedIfAbsent(recordingId);
 
             if (!first) {
                 throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
             }
 
-            log.info("[enqueue] dispatch async worker recordingId={}", recording.getId());
+            log.info("[enqueue] dispatch async worker recordingId={}", recordingId);
 
-            recordingJobQueue.enqueue(recording);
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    recordingJobQueue.enqueue(recordingId);
+                }
+            });
 
-            return new RecordingCreateResponse(recording.getId(), statusService.getStatus(recording.getId()).name());
+            return new RecordingCreateResponse(recordingId, statusService.getStatus(recordingId).name());
 
         }
 

@@ -46,4 +46,8 @@ public class Recording extends BaseEntity {
             question.attachRecording(this);
         }
     }
+
+    public void attachSttText(String sttText) {
+        this.sttText = sttText;
+    }
 }
