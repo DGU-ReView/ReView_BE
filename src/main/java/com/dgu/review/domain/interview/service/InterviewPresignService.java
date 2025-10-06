@@ -1,6 +1,7 @@
 package com.dgu.review.domain.interview.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.dgu.review.domain.interview.dto.RecordingUploadUrlRequest;
@@ -30,14 +31,17 @@ public class InterviewPresignService {
  @Value("${aws.s3.bucket}")
  private String bucket;
  private final InterviewQuestionRepository interviewQuestionRepository;
+ private final StringRedisTemplate redisTemplate;
 
  public RecordingUploadUrlResponse createRecordingPutUrl(RecordingUploadUrlRequest req, Long userId) {
-     // questionid가 실제 db에 있는지 검증 
-	 if(!interviewQuestionRepository.existsById(req.questionId())) {
+     Long questionId=req.questionId();
+     
+	 // questionid가 실제 db에 있는지 검증 
+	 if(!interviewQuestionRepository.existsById(questionId)) {
 		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
 	 };
 	 // questionid가 user의 소유가 맞는지 검증 
-	 if (!interviewQuestionRepository.existsByIdAndInterviewSessionUserId(req.questionId(), userId)) {
+	 if (!interviewQuestionRepository.existsByIdAndInterviewSessionUserId(questionId, userId)) {
          throw new ApiException(ErrorCode.FORBIDDEN_RESOURCE);
      }
 	 
@@ -46,7 +50,7 @@ public class InterviewPresignService {
 	 
 	 // contentType을 확장자로 
      String ext = mapExt(req.contentType());
-     String key = "recording/%d/%d.%s".formatted(userId, req.questionId(), ext);
+     String key = "recording/%d/%d.%s".formatted(userId, questionId, ext);
 
      PutObjectRequest put = PutObjectRequest.builder()
              .bucket(bucket)
@@ -65,6 +69,10 @@ public class InterviewPresignService {
      // url로 업로드 시 반드시 동일하게 보내야 검증 통과하는 헤더 (특히 Content-Type)
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", req.contentType());
+     
+     //key 값 redis에 저장 
+     String redisKey="presign:recording:"+ questionId;
+     redisTemplate.opsForValue().set(redisKey, key, Duration.ofMinutes(10));
 
      return new RecordingUploadUrlResponse(
              url.toString(),
@@ -109,6 +117,10 @@ public class InterviewPresignService {
      Map<String, String> headers = new HashMap<>();
      headers.put("Content-Type", contentType);
 
+     //key 값 redis에 저장 
+     String redisKey="presign:resume:"+ resumeId;
+     redisTemplate.opsForValue().set(redisKey, key, Duration.ofMinutes(10));
+     
      return new ResumeUploadUrlResponse(
              url.toString(),
              key,
