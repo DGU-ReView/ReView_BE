@@ -1,5 +1,8 @@
 package com.dgu.review.domain.interview.service;
 
+import java.net.URL;
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +13,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 @Slf4j
 @Service
@@ -20,6 +27,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 public class InterviewObjectReadService {
 
     private final S3Client s3;
+    private final S3Presigner presigner;
 
     @Value("${aws.s3.bucket}")
     private String bucket;
@@ -35,6 +43,32 @@ public class InterviewObjectReadService {
         String key = "recording/%d/%d.%s".formatted(userId, questionId, ext);
         return getObjectOrThrow(key, ErrorCode.STORAGE_RECORDING_NOT_FOUND);
     }
+    
+    // 녹음 get url 반환 
+    public String createRecordingGetUrl(Long userId, Long questionId, String ext) {
+        String key = "recording/%d/%d.%s".formatted(userId,questionId, ext);
+
+        long expiryMinutes = 10;
+
+        GetObjectRequest get = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presign = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(expiryMinutes))
+                .getObjectRequest(get)
+                .build();
+
+        PresignedGetObjectRequest signed = presigner.presignGetObject(presign);
+        URL url = signed.url();
+
+        return url.toString();
+
+    }
+    
+    
+    
     //예외 처리 
     private ResponseInputStream<GetObjectResponse> getObjectOrThrow(String key, ErrorCode notFoundCode) {
         try {
@@ -54,6 +88,8 @@ public class InterviewObjectReadService {
             throw new ApiException(ErrorCode.STORAGE_UNAVAILABLE);
         } 
     }
+    
+    
   
 }
 
