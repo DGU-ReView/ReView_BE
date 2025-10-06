@@ -33,8 +33,7 @@ public class InterviewObjectReadService {
     private String bucket;
 
     // 자소서 InputStream 반환 (호출자가 닫아야 함)
-    public ResponseInputStream<GetObjectResponse> openResume(Long userId, String resumeId, String ext) {
-        String key = "resume/%d/%s.%s".formatted(userId, resumeId, ext);
+    public ResponseInputStream<GetObjectResponse> openResume(String key) {
         return getObjectOrThrow(key, ErrorCode.STORAGE_RESUME_NOT_FOUND);
     }
 
