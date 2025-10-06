@@ -39,14 +39,12 @@ public class InterviewObjectReadService {
     }
 
     // 녹음 InputStream 반환
-    public ResponseInputStream<GetObjectResponse> openRecording(Long userId, Long questionId, String ext) {
-        String key = "recording/%d/%d.%s".formatted(userId, questionId, ext);
+    public ResponseInputStream<GetObjectResponse> openRecording(String key) {
         return getObjectOrThrow(key, ErrorCode.STORAGE_RECORDING_NOT_FOUND);
     }
     
     // 녹음 get url 반환 
-    public String createRecordingGetUrl(Long userId, Long questionId, String ext) {
-        String key = "recording/%d/%d.%s".formatted(userId,questionId, ext);
+    public String createRecordingGetUrl(String key) {
 
         long expiryMinutes = 10;
 
