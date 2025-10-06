@@ -22,8 +22,7 @@ public class InterviewGetUrlService {
     private String bucket;
 
     // 자소서 GET presigned URL 
-    public String createResumeGetUrl(Long userId, String resumeId, String ext) {
-        String key = "resume/%d/%d.%s".formatted(userId,resumeId,ext);
+    public String createResumeGetUrl(String key) {
 
         // 10분 유효
         long expiryMinutes = 10;
@@ -45,8 +44,7 @@ public class InterviewGetUrlService {
     }
 
  // 녹음 GET presigned URL
-    public String createRecordingGetUrl(Long userId, Long questionId, String ext) {
-        String key = "recording/%d/%d.%s".formatted(userId,questionId, ext);
+    public String createRecordingGetUrl(String key) {
 
         long expiryMinutes = 10;
 
