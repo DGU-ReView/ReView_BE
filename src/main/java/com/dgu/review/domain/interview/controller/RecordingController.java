@@ -28,10 +28,9 @@ public class RecordingController {
 
     @PostMapping("/questions/{questionId}/recordings")
     public ResponseEntity<ApiResponse<RecordingCreateResponse>> submitRecording(
-            @PathVariable Long questionId,
-            @Valid @RequestBody RecordingCreateRequest request
+            @PathVariable Long questionId
     ) {
-        RecordingCreateResponse response = recordingCommandService.createAndTranscribe(questionId, request);
+        RecordingCreateResponse response = recordingCommandService.createAndTranscribe(questionId);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(response));
     }
 

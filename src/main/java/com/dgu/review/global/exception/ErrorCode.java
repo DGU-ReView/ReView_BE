@@ -54,6 +54,9 @@ public enum ErrorCode {
 
 	RECORDING_ALREADY_PROCESSED("RECORDING_ALREADY_PROCESSED",
 			HttpStatus.BAD_REQUEST, "해당 id에 해당하는 녹음이 이미 처리되었습니다."),
+
+	REDIS_KEY_NOT_FOUND("REDIS_KEY_NOT_FOUND",
+			HttpStatus.BAD_REQUEST, "해당 key가 존재하지 않습니다."),
 	;
 	private final String code;
 	private final HttpStatus status;

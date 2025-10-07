@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Slf4j
@@ -26,13 +25,14 @@ public class RecordingCommandService {
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
     private final RecordingJobQueue recordingJobQueue;
+    private final InterviewPresignService interviewPresignService;
 
     @PersistenceContext
     private EntityManager em;
 
     @Transactional
-    public RecordingCreateResponse createAndTranscribe(Long questionId, RecordingCreateRequest request) {
-        Recording saved = saveRecording(questionId, request);
+    public RecordingCreateResponse createAndTranscribe(Long questionId) {
+        Recording saved = saveRecording(questionId);
         return enqueueRecordingJob(saved.getId());
     }
 
@@ -66,7 +66,7 @@ public class RecordingCommandService {
     }
 
 
-    private Recording saveRecording(Long questionId, RecordingCreateRequest req) {
+    private Recording saveRecording(Long questionId) {
         var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
             log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", questionId);
@@ -85,7 +85,7 @@ public class RecordingCommandService {
         }
 
         var rec = Recording.builder()
-                .objectKey(req.getObjectKey())
+                .objectKey(interviewPresignService.getRecordingObjectKey(questionId))
                 .sttText("")
                 .interviewQuestion(question)
                 .build();

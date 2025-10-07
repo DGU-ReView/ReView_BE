@@ -30,6 +30,7 @@ public class RecordingTranscriber {
 //    private final RestTemplate restTemplate = new RestTemplate();
     private final SttFeedbackService sttFeedbackService;
     private final InterviewQuestionRepository interviewQuestionRepository;
+    private final InterviewObjectReadService interviewObjectReadService;
 
 //    @Value("${stt.worker.base-url}")
 //    private String workerBaseUrl;
@@ -56,14 +57,15 @@ public class RecordingTranscriber {
             log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recordingId);
             log.info("[status:readback] recordingId={}, now={}", recordingId, statusService.getStatus(recordingId));
 
+            String audioPresignedUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
             String projectRoot = System.getProperty("user.dir");
-            String audioPath = projectRoot + File.separator + "audio_files" + File.separator + recording.getObjectKey();
             String scriptPath = projectRoot + File.separator + "stt_worker" + File.separator + "transcribe.py";
 
-            log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}, audioPath={}",
-                    recordingId, projectRoot, scriptPath, audioPath);
+            log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}",
+                    recordingId, projectRoot, scriptPath);
 
-            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPath);
+            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPresignedUrl);
             pb.directory(new File(projectRoot));
             pb.redirectErrorStream(true);
 
