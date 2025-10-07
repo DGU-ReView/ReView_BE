@@ -105,7 +105,7 @@ public class RecordingTranscriber {
                 statusService.setStatus(recordingId, RecordingStatus.FAILED, Duration.ofMinutes(30));
             }
         } catch (Exception e) {
-            statusService.setStatus(recordingId, RecordingStatus.UPLOADED, null);
+            statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
             log.error("STT 워커 실행 실패 recordingId={}", recordingId, e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
