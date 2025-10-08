@@ -22,7 +22,7 @@
         { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_URL::" },
         { "name": "DATABASE_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_USERNAME::" },
         { "name": "DATABASE_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_PASSWORD::" },
-        { "name": "REDIS_HOST", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_ACCESS_KEY::" }
+        { "name": "REDIS_HOST", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:REDIS_HOST::" }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
