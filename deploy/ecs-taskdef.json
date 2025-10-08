@@ -1,5 +1,5 @@
 {
-  "family": "cheongjeong-task",
+  "family": "re-view-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["EC2"],
   "cpu": "512",
