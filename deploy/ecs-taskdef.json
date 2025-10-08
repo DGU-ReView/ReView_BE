@@ -2,6 +2,8 @@
   "family": "cheongjeong-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["EC2"],
+  "cpu": "512",
+  "memory": "1024",
   "executionRoleArn": "arn:aws:iam::178735647226:role/ecsTaskExecutionRole",
   "taskRoleArn": "arn:aws:iam::178735647226:role/ReViewAppTaskRole",
   "containerDefinitions": [
