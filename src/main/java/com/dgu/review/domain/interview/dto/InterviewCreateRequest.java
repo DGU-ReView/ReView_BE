@@ -8,7 +8,7 @@ import com.dgu.review.domain.interview.entity.JobRole;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record InterviewStartRequest(
+public record InterviewCreateRequest(
      @NotNull InterviewMode mode,          // 면접 모드 
      @NotNull JobDomain desiredDomain,     // 희망 분야 
      @NotNull JobRole desiredRole,         // 희망 직군 

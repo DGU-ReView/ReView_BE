@@ -53,7 +53,10 @@ public enum ErrorCode {
 			HttpStatus.UNPROCESSABLE_ENTITY, "자소서가 비밀번호를 필요로 합니다. 비밀번호 제거 후 파일을 올려주세요."),
 	//자소서에 내용이 없음 
 	EMPTY_RESUME( "EMPTY_RESUME",
-				HttpStatus.UNPROCESSABLE_ENTITY, "자소서에 내용이 없습니다. ");
+				HttpStatus.UNPROCESSABLE_ENTITY, "자소서에 내용이 없습니다. "),
+	//사용자가 없음 
+	USER_NOT_FOUND("USER_NOT_FOUND",
+				HttpStatus.NOT_FOUND, "사용자가 없습니다.");
 	
 	
 	private final String code;

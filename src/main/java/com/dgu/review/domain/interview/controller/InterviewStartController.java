@@ -1,19 +1,13 @@
 package com.dgu.review.domain.interview.controller;
 
-import org.springframework.data.redis.core.RedisTemplate;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-
-import com.dgu.review.domain.interview.dto.InterviewStartRequest;
-import com.dgu.review.domain.interview.entity.InterviewMode;
-import com.dgu.review.domain.interview.entity.JobDomain;
-import com.dgu.review.domain.interview.entity.JobRole;
-import com.dgu.review.domain.interview.service.ResumeExtractionService;
+import com.dgu.review.domain.interview.dto.InterviewCreateRequest;
+import com.dgu.review.domain.interview.service.InterviewPreparationService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,28 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class InterviewStartController {
-	private final ResumeExtractionService resumeExtractionService;
-	private final RedisTemplate<String, String> redisTemplate;
-	
+	private final InterviewPreparationService interviewPreparationService;
+
 	
 	@PostMapping(value = "/interview-sessions")
-    public void extract(@Valid @RequestBody InterviewStartRequest req) {
-		//목 userId
-		Long userId = 123L; 
-		
-        // request body로 
-		InterviewMode mode = req.mode();
-		JobDomain desiredDomain=req.desiredDomain();
-		JobRole desiredRole = req.desiredRole();
-		
-		String resumeId=req.resumeId();
-		String resumeObjectKey=redisTemplate.opsForValue().get("presign:resume:" + resumeId);
-		
-		// 자소서 변환 시작 
-		String resumeText = resumeExtractionService.extractText(resumeId, resumeObjectKey);
-		
-		// db에 인터뷰 섹션 저장 
-		
+    public void extract(@Valid @RequestBody InterviewCreateRequest req) {
+
+		// 자소서 변환 & db 저장 
+		String resumeText = interviewPreparationService.extractText(req);
+		log.info("자소서 텍스트:{}",resumeText);
 		
     }
 
