@@ -1,0 +1,35 @@
+{
+  "family": "cheongjeong-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "executionRoleArn": "arn:aws:iam::178735647226:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::178735647226:role/ReViewAppTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "<IMAGE>",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "environment": [
+        { "name": "AWS_S3_BUCKET", "value": "review-interview-s3" },
+        { "name": "REDIS_PORT", "value": "6379" }
+      ],
+      "secrets": [
+        { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_URL::" },
+        { "name": "DATABASE_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_USERNAME::" },
+        { "name": "DATABASE_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_PASSWORD::" },
+        { "name": "REDIS_HOST", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:259096356427:secret:sesaonton/prod-71Vhi7:MINIO_ACCESS_KEY::" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "re-view-log",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

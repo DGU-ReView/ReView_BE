@@ -77,7 +77,7 @@ jobs:
           docker push $REG/$ECR_REPO:$IMAGE_TAG
 
           BR="${GITHUB_REF_NAME}"
-          if [ "$BR" = "develop" ] || [ "$BR" = "feat/#19" ] || [ "$BR" = "main" ]; then
+          if [ "$BR" = "develop" ] || [ "$BR" = "main" ]; then
             docker tag $REG/$ECR_REPO:$IMAGE_TAG $REG/$ECR_REPO:${BR}-latest
             docker push $REG/$ECR_REPO:${BR}-latest
           fi
