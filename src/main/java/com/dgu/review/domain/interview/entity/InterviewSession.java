@@ -29,10 +29,17 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 1024, nullable = false)
     private String resumeObjectKey;
 
-    @Column(length = 100)
-    private String jobRole;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40, nullable = false)
+    private InterviewMode mode;
 
-    //private User user;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40, nullable = false)
+    private JobDomain jobDomain;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40, nullable = false)
+    private JobRole jobRole;
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
