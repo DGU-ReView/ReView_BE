@@ -22,7 +22,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-
+      repositories:
+        enabled: false
 stt:
   worker:
     base-url: http://localhost:8081   # 기본값/ 배포할때 EC2/Lambda 주소로 바꾸면 됨
