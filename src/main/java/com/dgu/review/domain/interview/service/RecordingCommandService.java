@@ -1,6 +1,5 @@
 package com.dgu.review.domain.interview.service;
 
-import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;

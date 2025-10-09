@@ -1,13 +1,11 @@
 package com.dgu.review.domain.interview.controller;
 
-import com.dgu.review.domain.interview.dto.request.RecordingCreateRequest;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.service.RecordingCommandService;
 import com.dgu.review.domain.interview.service.RecordingQueryService;
 import com.dgu.review.domain.interview.service.RecordingTranscriber;
 import com.dgu.review.global.response.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

@@ -54,8 +54,8 @@ public class RecordingTranscriber {
                     recordingId, Thread.currentThread().getName(), recording.getObjectKey());
 
             statusService.setStatus(recordingId, RecordingStatus.TRANSCRIBING, null);
-            log.info("[sttWorker:status] recordingId={} -> TRANSCRIBING", recordingId);
-            log.info("[status:readback] recordingId={}, now={}", recordingId, statusService.getStatus(recordingId));
+            log.info("[status:update] recordingId={} -> TRANSCRIBING (readback={})",
+                    recordingId, statusService.getStatus(recordingId));
 
             String audioPresignedUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
 
