@@ -74,8 +74,7 @@ public class InterviewPreparationService {
     	InterviewSession session = InterviewSession.builder() 
     			        .resumeObjectKey(resumeObjectKey)
     			        .mode(req.mode())
-    			        .jobDomain(req.desiredDomain())
-    			        .jobRole(req.desiredRole())
+    			        .jobRole(req.jobRole())
     			        .user(user)
     			        .build();
 

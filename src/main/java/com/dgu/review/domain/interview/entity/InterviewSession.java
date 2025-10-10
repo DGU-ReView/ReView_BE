@@ -33,13 +33,9 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 40, nullable = false)
     private InterviewMode mode;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 40, nullable = false)
-    private JobDomain jobDomain;
+    @Column(length = 15, nullable = false)
+    private String jobRole;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 40, nullable = false)
-    private JobRole jobRole;
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
