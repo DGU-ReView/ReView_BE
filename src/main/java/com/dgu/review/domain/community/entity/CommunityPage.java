@@ -26,8 +26,9 @@ public class CommunityPage extends BaseEntity {
     @Column(name = "title",nullable = false, length = 255)
     private String title;
 
-    @Column(name = "domain",nullable = false, length = 255)
-    private String domain;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "domain", nullable = false, length = 255)
+    private DomainCategory domain;
 
     @Column(name = "company_name", nullable = false, length = 255)
     private String companyName;
@@ -49,4 +50,9 @@ public class CommunityPage extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_cp_author")) //외래키 제약 이름 지정
     private User author; //객체 연관관계를 테이블의 외래키로 바꿔서 저장/조회
 
+    public void updateContents(String interviewPreps, String answerStrategies, String tips) {
+        this.interviewPreps = interviewPreps;
+        this.answerStrategies = answerStrategies;
+        this.tips = tips;
+    }
 }
