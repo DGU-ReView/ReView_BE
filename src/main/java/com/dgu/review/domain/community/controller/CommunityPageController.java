@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/community/pages")
@@ -23,11 +24,11 @@ public class CommunityPageController {
      * 예: GET /api/community/pages?limit=12
      */
     @GetMapping
-    public ResponseEntity<List<CommunityPagePreviewResponse>> getAll(
+    public ResponseEntity<Map<String, List<CommunityPagePreviewResponse>>> getAll(
             @RequestParam(defaultValue = "10") int limit
     ) {
-        var previews = communityService.getAllPreviews(limit);
-        return ResponseEntity.ok(previews);
+        var groupedPreviews = communityService.getAllPreviewsGroupedByDomain(limit);
+        return ResponseEntity.ok(groupedPreviews);
     }
 
     /**
@@ -90,10 +91,11 @@ public class CommunityPageController {
 
     /**
      * [GET] 드롭다운 분야 목록
+     * 새 글 작성 시 사용자가 선택할 분야 목록을 제공하는 API
      * GET /api/community/pages/dropdown
      */
     @GetMapping("/dropdown")
-    public ResponseEntity<List<String>> dropdown() {
-        return ResponseEntity.ok(communityService.getDomains());
+    public ResponseEntity<List<DomainDropdownResponse>> dropdown() {
+        return ResponseEntity.ok(communityService.getDomainDropdowns());
     }
 }

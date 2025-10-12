@@ -51,8 +51,8 @@ public class CommunityPage extends BaseEntity {
     private User author; //객체 연관관계를 테이블의 외래키로 바꿔서 저장/조회
 
     public void updateContents(String interviewPreps, String answerStrategies, String tips) {
-        this.interviewPreps = interviewPreps;
-        this.answerStrategies = answerStrategies;
-        this.tips = tips;
+        if (interviewPreps != null) this.interviewPreps = interviewPreps;
+        if (answerStrategies != null) this.answerStrategies = answerStrategies;
+        if (tips != null) this.tips = tips;
     }
 }

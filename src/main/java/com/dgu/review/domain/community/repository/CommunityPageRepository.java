@@ -12,7 +12,7 @@ import org.springframework.data.repository.query.Param;
 public interface CommunityPageRepository extends JpaRepository<CommunityPage, Long> {
 
 
-    Page<CommunityPage> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<CommunityPage> findAllByOrderByUpdatedAtDesc(Pageable pageable);
 
 
     @Query("""

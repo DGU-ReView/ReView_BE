@@ -14,8 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,15 +28,18 @@ public class CommunityPageService {
     private final CommunityPageRepository communityRepo;
     private final EntityManager em;
 
-    private static final Sort LATEST = Sort.by(Sort.Direction.DESC, "createdAt");
+    private static final Sort LATEST = Sort.by(Sort.Direction.DESC, "updatedAt");
 
     // 전체 미리보기 목록
-    public List<CommunityPagePreviewResponse> getAllPreviews(int limit) {
+    public Map<String, List<CommunityPagePreviewResponse>> getAllPreviewsGroupedByDomain(int limit) {
         Pageable pageable = PageRequest.of(0, limit, LATEST);
-        Page<CommunityPage> page = communityRepo.findAllByOrderByCreatedAtDesc(pageable);
+        Page<CommunityPage> page = communityRepo.findAllByOrderByUpdatedAtDesc(pageable);
+
         return page.getContent().stream()
-                .map(this::toPreviewDto)
-                .collect(Collectors.toList());
+                .collect(Collectors.groupingBy(
+                        e -> e.getDomain().getDisplayName(), // ← 이미 enum에서 제공 중
+                        Collectors.mapping(this::toPreviewDto, Collectors.toList())
+                ));
     }
 
 
@@ -42,7 +47,14 @@ public class CommunityPageService {
     public List<CommunityPagePreviewResponse> searchPreviews(String keyword, int limit) {
         Pageable pageable = PageRequest.of(0, limit, LATEST);
         Page<CommunityPage> page = communityRepo.searchByKeyword(keyword, pageable);
-        return page.getContent().stream().map(this::toPreviewDto).collect(Collectors.toList());
+
+        if (page.isEmpty()) {
+            throw new ApiException(ErrorCode.COMMUNITY_SEARCH_NO_RESULT);
+        }
+
+        return page.getContent().stream()
+                .map(this::toPreviewDto)
+                .collect(Collectors.toList());
     }
 
     // 상세 조회
@@ -60,7 +72,7 @@ public class CommunityPageService {
 
         String autoTitle = String.format("%s %s %s",
                 req.getCompanyName(),
-                req.getDomain(),
+                req.getDomain().getDisplayName(),
                 req.getJob());
 
         CommunityPage entity = CommunityPage.builder()
@@ -83,6 +95,7 @@ public class CommunityPageService {
     public CommunityPageResponse update(Long pageId, CommunityPageUpdateRequest req) {
         CommunityPage entity = communityRepo.findById(pageId)
                 .orElseThrow(() -> new ApiException(ErrorCode.COMMUNITY_PAGE_NOT_FOUND));
+
         entity.updateContents(req.getInterviewPreps(), req.getAnswerStrategies(), req.getTips());
         return toDetailDto(entity);
     }
@@ -96,9 +109,9 @@ public class CommunityPageService {
         communityRepo.deleteById(pageId);
     }
 
-    public List<String> getDomains() {
+    public List<DomainDropdownResponse> getDomainDropdowns() {
         return Arrays.stream(DomainCategory.values())
-                .map(DomainCategory::getDisplayName)
+                .map(domain -> new DomainDropdownResponse(domain.name(), domain.getDisplayName()))
                 .toList();
     }
 
@@ -112,6 +125,9 @@ public class CommunityPageService {
     }
 
     private CommunityPageResponse toDetailDto(CommunityPage e) {
+        LocalDateTime recentUpdatedAt =
+                (e.getUpdatedAt() != null) ? e.getUpdatedAt() : e.getCreatedAt();
+
         return CommunityPageResponse.builder()
                 .id(e.getId())
                 .companyName(e.getCompanyName())
@@ -120,8 +136,7 @@ public class CommunityPageService {
                 .interviewPreps(e.getInterviewPreps())
                 .answerStrategies(e.getAnswerStrategies())
                 .tips(e.getTips())
-                .createdAt(e.getCreatedAt())
-                .updatedAt(e.getUpdatedAt())
+                .recentUpdatedAt(recentUpdatedAt)
                 .build();
     }
 }

@@ -48,7 +48,11 @@ public enum ErrorCode {
 
     //커뮤니티에서 게시글 찾을 수 없음
     COMMUNITY_PAGE_NOT_FOUND("COMMUNITY_PAGE_NOT_FOUND",
-            HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다.");
+            HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),
+
+    // 검색 결과 없음
+    COMMUNITY_SEARCH_NO_RESULT("COMMUNITY_SEARCH_NO_RESULT",
+            HttpStatus.NOT_FOUND, "검색 결과가 없습니다.");
 
 
 	private final String code;
