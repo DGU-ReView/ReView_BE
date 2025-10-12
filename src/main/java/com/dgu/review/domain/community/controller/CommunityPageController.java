@@ -80,16 +80,6 @@ public class CommunityPageController {
     }
 
     /**
-     * [DELETE] 글 삭제
-     * 예: DELETE /api/community/pages/123
-     */
-    @DeleteMapping("/{pageId}")
-    public ResponseEntity<Void> delete(@PathVariable Long pageId) {
-        communityService.delete(pageId);                   // 없으면 404, 있으면 삭제
-        return ResponseEntity.noContent().build();         // 204 No Content
-    }
-
-    /**
      * [GET] 드롭다운 분야 목록
      * 새 글 작성 시 사용자가 선택할 분야 목록을 제공하는 API
      * GET /api/community/pages/dropdown

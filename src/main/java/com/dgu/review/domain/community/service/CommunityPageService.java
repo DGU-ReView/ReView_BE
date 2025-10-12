@@ -100,15 +100,6 @@ public class CommunityPageService {
         return toDetailDto(entity);
     }
 
-    // 글 삭제
-    @Transactional
-    public void delete(Long pageId) {
-        if (!communityRepo.existsById(pageId)) {
-            throw new ApiException(ErrorCode.COMMUNITY_PAGE_NOT_FOUND);
-        }
-        communityRepo.deleteById(pageId);
-    }
-
     public List<DomainDropdownResponse> getDomainDropdowns() {
         return Arrays.stream(DomainCategory.values())
                 .map(domain -> new DomainDropdownResponse(domain.name(), domain.getDisplayName()))
