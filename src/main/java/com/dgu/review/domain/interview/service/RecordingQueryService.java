@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class RecordingQueryService {
 
+    private static final int TOTAL_ROOTS = 4;
+
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
 
@@ -25,40 +27,57 @@ public class RecordingQueryService {
         var recording = recordingRepo.findById(recordingId)
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
+        InterviewQuestion current = recording.getInterviewQuestion();
+        InterviewQuestion root = getRoot(current);
+
         var status = statusService.getStatus(recordingId);
         var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
-        var savedFollowUp = recording.getInterviewQuestion().getFollowUpQuestion();
 
-        String followUpQuestion =
-                (status == RecordingStatus.FOLLOWUP_GENERATED)
-                        ? (savedFollowUp != null ? savedFollowUp.getQuestion() : "추가 질문이 필요하지 않습니다.")
-                        : null;
+        var savedFollowUp = current.getFollowUpQuestion();
+        boolean followUpGenerated = (status == RecordingStatus.FOLLOWUP_GENERATED);
 
-        boolean followUpDone =
-                (status == RecordingStatus.FOLLOWUP_GENERATED)
-                    && ("추가 질문이 필요하지 않습니다.".equals(followUpQuestion) || savedFollowUp == null);
+        boolean followUpDone = followUpGenerated && savedFollowUp == null;
+
+        Long nextQuestionId = null;
+        String followUpQuestion = null;
+
+        if (followUpGenerated) {
+            if (followUpDone) {
+                nextQuestionId = findNextRootId(root);
+            } else {
+                nextQuestionId = savedFollowUp.getId();
+                followUpQuestion = savedFollowUp.getQuestion();
+            }
+        }
+
+        boolean sessionCompleted = followUpDone && (nextQuestionId == null || root.getQuestionNumber() == TOTAL_ROOTS);
 
         return new RecordingResultsResponse(
-                recordingId,
+                nextQuestionId,
                 status,
                 text,
                 followUpQuestion,
                 followUpDone,
                 new ContextStatus(
-                        recording.getInterviewQuestion().getInterviewSession().getId(),
-                        (isFourthRootQuestion(recording.getInterviewQuestion()) && followUpDone)
+                        current.getInterviewSession().getId(),
+                        sessionCompleted,
+                        root.getQuestionNumber()
                 ));
     }
 
-    private boolean isFourthRootQuestion(InterviewQuestion question) {
-        if (question == null) return false;
+    private Long findNextRootId(InterviewQuestion root) {
+        return root.getInterviewSession().getQuestions().stream()
+                .filter(q -> q.getParentQuestion() == null)
+                .filter(q -> q.getQuestionNumber() == root.getQuestionNumber() + 1)
+                .findFirst()
+                .map(InterviewQuestion::getId)
+                .orElse(null);
+    }
 
-        InterviewQuestion current = question;
-        while (current.getParentQuestion() != null) {
-            current = current.getParentQuestion();
-        }
-
-        return current.getQuestionNumber() == 4;
+    private InterviewQuestion getRoot(InterviewQuestion q) {
+        var cur = q;
+        while (cur.getParentQuestion() != null) cur = cur.getParentQuestion();
+        return cur;
     }
 
 }
