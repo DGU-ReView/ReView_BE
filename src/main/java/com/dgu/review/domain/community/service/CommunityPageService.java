@@ -31,16 +31,30 @@ public class CommunityPageService {
     private static final Sort LATEST = Sort.by(Sort.Direction.DESC, "updatedAt");
 
     // 전체 미리보기 목록
-    public Map<String, List<CommunityPagePreviewResponse>> getAllPreviewsGroupedByDomain(int limit) {
-        Pageable pageable = PageRequest.of(0, limit, LATEST);
-        Page<CommunityPage> page = communityRepo.findAllByOrderByUpdatedAtDesc(pageable);
+    public List<CategoryPreviewResponse> getAllPreviewsGroupedByDomainWithCursor(Map<String, Long> cursors, int limit) {
+        return Arrays.stream(DomainCategory.values())
+                .map(category -> {
+                    Long cursor = cursors.getOrDefault(category.name(), null);
 
-        return page.getContent().stream()
-                .collect(Collectors.groupingBy(
-                        e -> e.getDomain().getDisplayName(), // ← 이미 enum에서 제공 중
-                        Collectors.mapping(this::toPreviewDto, Collectors.toList())
-                ));
+                    List<CommunityPage> pages = communityRepo.findByCategoryWithCursor(
+                            category, cursor, limit
+                    );
+
+                    Long nextCursor = pages.isEmpty() ? null : pages.get(pages.size() - 1).getId();
+
+                    List<CommunityPagePreviewResponse> previews = pages.stream()
+                            .map(this::toPreviewDto)
+                            .toList();
+
+                    return CategoryPreviewResponse.builder()
+                            .category(category)
+                            .previews(previews)
+                            .nextCursor(nextCursor)
+                            .build();
+                })
+                .toList();
     }
+
 
 
     // 키워드 검색
@@ -127,7 +141,7 @@ public class CommunityPageService {
                 .interviewPreps(e.getInterviewPreps())
                 .answerStrategies(e.getAnswerStrategies())
                 .tips(e.getTips())
-                .recentUpdatedAt(recentUpdatedAt)
+                .updatedAt(e.getUpdatedAt())
                 .build();
     }
 }

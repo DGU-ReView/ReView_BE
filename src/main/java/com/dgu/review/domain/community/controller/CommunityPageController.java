@@ -24,11 +24,12 @@ public class CommunityPageController {
      * 예: GET /api/community/pages?limit=12
      */
     @GetMapping
-    public ResponseEntity<Map<String, List<CommunityPagePreviewResponse>>> getAll(
-            @RequestParam(defaultValue = "10") int limit
+    public ResponseEntity<List<CategoryPreviewResponse>> getAll(
+            @RequestParam Map<String, Long> cursors,  // ex: ?IT_ENGINEERING=123&BUSINESS_FINANCE=50
+            @RequestParam(defaultValue = "5") int limit
     ) {
-        var groupedPreviews = communityService.getAllPreviewsGroupedByDomain(limit);
-        return ResponseEntity.ok(groupedPreviews);
+        var previews = communityService.getAllPreviewsGroupedByDomainWithCursor(cursors, limit);
+        return ResponseEntity.ok(previews);
     }
 
     /**

@@ -20,5 +20,5 @@ public class CommunityPageResponse {
     private String answerStrategies;
     private String tips;
     private LocalDateTime createdAt;
-    private LocalDateTime recentUpdatedAt;
+    private LocalDateTime updatedAt;
 }
