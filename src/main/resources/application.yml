@@ -1,6 +1,6 @@
+server:
+  port: 8080
 spring:
-  config:
-    import: classpath:env.properties
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}
@@ -22,7 +22,8 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-
+      repositories:
+        enabled: false
 stt:
   worker:
     base-url: http://localhost:8081   # 기본값/ 배포할때 EC2/Lambda 주소로 바꾸면 됨
@@ -30,6 +31,7 @@ stt:
 aws:
   s3:
     bucket: ${AWS_S3_BUCKET}         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
+
   region: ap-northeast-2    # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
 bedrock:
   region: ap-northeast-2
@@ -37,3 +39,11 @@ bedrock:
   max-tokens: 512
   temperature: 0.4
   topP: 0.9
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
