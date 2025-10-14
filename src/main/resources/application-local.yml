@@ -22,7 +22,27 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}        # Kakao REST API 키 (필수)
+            client-name: Kakao
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/kakao"
+            # 필요 스코프만 요청 (이메일은 사용자가 미인증/거부 시 null 가능)
+            scope: profile_nickname, profile_image, account_email
+            # 시크릿을 쓰는 경우 폼 바디로 인증
+            client-authentication-method: client_secret_post
+            provider: kakao
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            # OAuth2User의 식별자로 사용할 필드
+            user-name-attribute: id
 stt:
   worker:
     base-url: http://localhost:8081   # 기본값/ 배포할때 EC2/Lambda 주소로 바꾸면 됨
