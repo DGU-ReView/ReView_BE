@@ -45,8 +45,9 @@ public class InterviewObjectReadService {
     // 녹음 get url 반환 
     public String createRecordingGetUrl(String key) {
 
-        long expiryMinutes = 10;
+        assertObjectExistsOrThrow(key, ErrorCode.STORAGE_RECORDING_NOT_FOUND);
 
+        long expiryMinutes = 10;
         GetObjectRequest get = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)
@@ -86,7 +87,21 @@ public class InterviewObjectReadService {
         } 
     }
     
-    
+    private void assertObjectExistsOrThrow(String key, ErrorCode notFoundCode) {
+        try {
+            s3.headObject(b -> b.bucket(bucket).key(key));
+        } catch (NoSuchKeyException e) {
+            throw new ApiException(notFoundCode);
+        } catch (S3Exception e) {
+            int sc = e.statusCode();
+            if (sc == 404 ) {
+                log.info("key :{}인 리소스를 s3에서 찾을 수 없습니다. ",key);
+                throw new ApiException(notFoundCode);
+            }
+            if (sc == 403 ) throw new ApiException(ErrorCode.FORBIDDEN_STORAGE);
+            throw new ApiException(ErrorCode.STORAGE_UNAVAILABLE);
+        }
+    }
   
 }
 

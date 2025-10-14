@@ -22,23 +22,38 @@ public class InterviewQuestion extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TINYINT")
+    @Column(columnDefinition = "TINYINT")
     private Integer questionNumber;
 
     @Column(nullable = false, columnDefinition = "text")
     private String question;
 
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean followUpDone = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_session_id", nullable = false)
     private InterviewSession interviewSession;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_question_id")
     private InterviewQuestion parentQuestion;
 
-    @OneToMany(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false)
-    private List<InterviewQuestion> childrenQuestions = new ArrayList<>();
+    @OneToOne(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.EAGER)
+    private InterviewQuestion followUpQuestion;
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
+
+    public void attachRecording(Recording recording) {
+        this.recording = recording;
+        if (recording != null) {
+            recording.attachToQuestion(this);
+        }
+    }
+
+    public void attachFollowUp(InterviewQuestion followUpQuestion) {
+        this.followUpQuestion = followUpQuestion;
+    }
 }
