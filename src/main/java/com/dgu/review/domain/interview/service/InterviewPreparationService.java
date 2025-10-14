@@ -7,6 +7,8 @@ import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
+
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.metadata.Metadata;
@@ -29,7 +31,7 @@ public class InterviewPreparationService {
     private final InterviewSessionRepository interviewSessionRepository;	
     private final UserRepository userRepository;
 	
-
+    @Transactional
     public String extractText(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
     	String resumeObjectKey=redisTemplate.opsForValue().get("presign:resume:" + resumeId);
@@ -78,7 +80,7 @@ public class InterviewPreparationService {
     			        .user(user)
     			        .build();
 
-    	session = interviewSessionRepository.save(session);
+    	interviewSessionRepository.save(session);
     }
     
     // 자소서 필터링 
