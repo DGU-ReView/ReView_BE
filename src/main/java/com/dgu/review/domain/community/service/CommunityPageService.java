@@ -58,17 +58,44 @@ public class CommunityPageService {
 
 
     // 키워드 검색
-    public List<CommunityPagePreviewResponse> searchPreviews(String keyword, int limit) {
-        Pageable pageable = PageRequest.of(0, limit, LATEST);
-        Page<CommunityPage> page = communityRepo.searchByKeyword(keyword, pageable);
-
-        if (page.isEmpty()) {
-            throw new ApiException(ErrorCode.COMMUNITY_SEARCH_NO_RESULT);
+    public List<CategoryPreviewResponse> searchPreviewsGroupedByDomainWithCursor(
+            String keyword,
+            Map<String, Long> cursors,
+            int limit
+    ) {
+        // 키워드가 없거나 공백이면 빈 리스트 반환
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Arrays.stream(DomainCategory.values())
+                    .map(category -> CategoryPreviewResponse.builder()
+                            .category(category)
+                            .previews(List.of())  // 빈 리스트
+                            .nextCursor(null)
+                            .build())
+                    .toList();
         }
 
-        return page.getContent().stream()
-                .map(this::toPreviewDto)
-                .collect(Collectors.toList());
+        // 키워드 있을 경우
+        return Arrays.stream(DomainCategory.values())
+                .map(category -> {
+                    Long cursor = cursors.getOrDefault(category.name(), null);
+
+                    List<CommunityPage> pages = communityRepo.searchByKeywordAndCategoryWithCursor(
+                            keyword, category, cursor, limit
+                    );
+
+                    Long nextCursor = pages.isEmpty() ? null : pages.get(pages.size() - 1).getId();
+
+                    List<CommunityPagePreviewResponse> previews = pages.stream()
+                            .map(this::toPreviewDto)
+                            .toList();
+
+                    return CategoryPreviewResponse.builder()
+                            .category(category)
+                            .previews(previews)
+                            .nextCursor(nextCursor)
+                            .build();
+                })
+                .toList();
     }
 
     // 상세 조회
@@ -130,9 +157,6 @@ public class CommunityPageService {
     }
 
     private CommunityPageResponse toDetailDto(CommunityPage e) {
-        LocalDateTime recentUpdatedAt =
-                (e.getUpdatedAt() != null) ? e.getUpdatedAt() : e.getCreatedAt();
-
         return CommunityPageResponse.builder()
                 .id(e.getId())
                 .companyName(e.getCompanyName())

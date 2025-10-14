@@ -13,16 +13,23 @@ import java.util.List;
 public interface CommunityPageRepository extends JpaRepository<CommunityPage, Long> {
 
 
-    Page<CommunityPage> findAllByOrderByUpdatedAtDesc(Pageable pageable);
-
-    @Query("""
-           SELECT c
-             FROM CommunityPage c
-            WHERE LOWER(c.companyName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(c.job)         LIKE LOWER(CONCAT('%', :keyword, '%'))
-               OR LOWER(c.domain)      LIKE LOWER(CONCAT('%', :keyword, '%'))
-           """)
-    Page<CommunityPage> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+    @Query(value = """
+    SELECT *
+      FROM community_page
+     WHERE domain = :#{#category.name()}
+       AND (LOWER(company_name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+         OR LOWER(job) LIKE LOWER(CONCAT('%', :keyword, '%'))
+         OR LOWER(domain) LIKE LOWER(CONCAT('%', :keyword, '%')))
+       AND (:cursor IS NULL OR page_id < :cursor)
+     ORDER BY page_id DESC
+     LIMIT :limit
+""", nativeQuery = true)
+    List<CommunityPage> searchByKeywordAndCategoryWithCursor(
+            @Param("keyword") String keyword,
+            @Param("category") DomainCategory category,
+            @Param("cursor") Long cursor,
+            @Param("limit") int limit
+    );
 
 
     /**

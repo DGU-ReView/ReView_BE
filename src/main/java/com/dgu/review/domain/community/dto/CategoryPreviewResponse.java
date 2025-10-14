@@ -12,4 +12,5 @@ public class CategoryPreviewResponse {
     private DomainCategory category;
     private List<CommunityPagePreviewResponse> previews;
     private Long nextCursor;
+
 }

@@ -33,16 +33,18 @@ public class CommunityPageController {
     }
 
     /**
-     * [GET] 키워드 검색(회사/직무/분야)
+     * [GET] 키워드 검색 (회사/직무/분야)
      * 예: GET /api/community/pages/search?q=백엔드&limit=6
+     * 프론트는 각 카테고리별로 커서 파라미터를 전달할 수 있음.
      */
     @GetMapping("/search")
-    public ResponseEntity<List<CommunityPagePreviewResponse>> search(
+    public ResponseEntity<List<CategoryPreviewResponse>> search(
             @RequestParam String q,
-            @RequestParam(defaultValue = "10") int limit
+            @RequestParam Map<String, Long> cursors,
+            @RequestParam(defaultValue = "6") int limit
     ) {
-        var previews = communityService.searchPreviews(q, limit);
-        return ResponseEntity.ok(previews);
+        var groupedPreviews = communityService.searchPreviewsGroupedByDomainWithCursor(q, cursors, limit);
+        return ResponseEntity.ok(groupedPreviews);
     }
 
 

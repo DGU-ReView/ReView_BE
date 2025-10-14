@@ -13,12 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CommunityPageUpdateRequest {
 
-    @NotBlank(message = "면접 대비 내용은 필수입니다.")
     private String interviewPreps;
-
-    @NotBlank(message = "답변 전략은 필수입니다.")
     private String answerStrategies;
-
-    @NotBlank(message = "팁/기타는 필수입니다.")
     private String tips;
 }
