@@ -47,7 +47,7 @@ public enum ErrorCode {
 			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. "),
 	//자소서 추출 실패 
 	RESUME_TEXT_EXTRACTION_FAILED( "RESUME_TEXT_EXTRACTION_FAILED",
-			HttpStatus.UNPROCESSABLE_ENTITY, "저장소에서 장애가 발생했습니다. "),
+			HttpStatus.UNPROCESSABLE_ENTITY, "자소서 파일을 텍스트로 변환하는데에 실패하였습니다. "),
 	//자소서 비밀번호 요구 
 	RESUME_PASSWORD_REQUIRED( "RESUME_PASSWORD_REQUIRED",
 			HttpStatus.UNPROCESSABLE_ENTITY, "자소서가 비밀번호를 필요로 합니다. 비밀번호 제거 후 파일을 올려주세요."),
