@@ -45,6 +45,15 @@ public enum ErrorCode {
 	// 저장소에서 자소서 찾을 수 없음
 	STORAGE_UNAVAILABLE( "STORAGE_UNAVAILABLE",
 			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. "),
+
+    //커뮤니티에서 게시글 찾을 수 없음
+    COMMUNITY_PAGE_NOT_FOUND("COMMUNITY_PAGE_NOT_FOUND",
+            HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),
+
+    // 검색 결과 없음
+    COMMUNITY_SEARCH_NO_RESULT("COMMUNITY_SEARCH_NO_RESULT",
+            HttpStatus.NOT_FOUND, "검색 결과가 없습니다."),
+
 	//자소서 추출 실패 
 	RESUME_TEXT_EXTRACTION_FAILED( "RESUME_TEXT_EXTRACTION_FAILED",
 			HttpStatus.UNPROCESSABLE_ENTITY, "자소서 파일을 텍스트로 변환하는데에 실패하였습니다. "),
@@ -70,6 +79,7 @@ public enum ErrorCode {
 	REDIS_KEY_NOT_FOUND("REDIS_KEY_NOT_FOUND",
 			HttpStatus.BAD_REQUEST, "해당 key가 존재하지 않습니다."),
 	;
+
 	private final String code;
 	private final HttpStatus status;
 	private final String defaultMessage;
