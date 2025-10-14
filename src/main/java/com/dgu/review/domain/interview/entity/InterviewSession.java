@@ -29,7 +29,11 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 1024, nullable = false)
     private String resumeObjectKey;
 
-    @Column(length = 100)
+    @Enumerated(EnumType.STRING)
+    @Column(length = 40, nullable = false)
+    private InterviewMode mode;
+
+    @Column(length = 15, nullable = false)
     private String jobRole;
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)

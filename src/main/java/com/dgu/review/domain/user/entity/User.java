@@ -3,7 +3,6 @@ package com.dgu.review.domain.user.entity;
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.interview.entity.InterviewSession;
-import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,5 +39,5 @@ public class User extends BaseEntity {
     private List<CommunityPage> communityPages = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
+    private List<com.dgu.review.domain.peerfeedback.entity.PeerFeedback> peerFeedbacks = new ArrayList<>();
 }
