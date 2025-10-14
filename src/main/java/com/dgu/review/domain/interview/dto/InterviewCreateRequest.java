@@ -8,8 +8,8 @@ import jakarta.validation.constraints.Size;
 
 public record InterviewCreateRequest(
      @NotNull InterviewMode mode,          // 면접 모드 
-     @NotNull String  jobRole,         // 희망 직군 
-     @Size(max = 512) String resumeId 
+     @NotNull @Size(max = 15)String  jobRole,         // 희망 직군 
+     @NotNull @Size(max = 512) String resumeId 
 
 ) {}
 
