@@ -45,6 +45,18 @@ public enum ErrorCode {
 	// 저장소에서 자소서 찾을 수 없음
 	STORAGE_UNAVAILABLE( "STORAGE_UNAVAILABLE",
 			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. "),
+	//자소서 추출 실패 
+	RESUME_TEXT_EXTRACTION_FAILED( "RESUME_TEXT_EXTRACTION_FAILED",
+			HttpStatus.UNPROCESSABLE_ENTITY, "자소서 파일을 텍스트로 변환하는데에 실패하였습니다. "),
+	//자소서 비밀번호 요구 
+	RESUME_PASSWORD_REQUIRED( "RESUME_PASSWORD_REQUIRED",
+			HttpStatus.UNPROCESSABLE_ENTITY, "자소서가 비밀번호를 필요로 합니다. 비밀번호 제거 후 파일을 올려주세요."),
+	//자소서에 내용이 없음 
+	EMPTY_RESUME( "EMPTY_RESUME",
+				HttpStatus.UNPROCESSABLE_ENTITY, "자소서에 내용이 없습니다. "),
+	//사용자가 없음 
+	USER_NOT_FOUND("USER_NOT_FOUND",
+				HttpStatus.NOT_FOUND, "사용자가 없습니다."),
 
 	FOLLOWUP_QUESTION_NOT_FOUND("FOLLOWUP_QUESTION_NOT_FOUND",
 								 HttpStatus.BAD_REQUEST, "해당 질문에 꼬리질문이 존재하지 않습니다."),

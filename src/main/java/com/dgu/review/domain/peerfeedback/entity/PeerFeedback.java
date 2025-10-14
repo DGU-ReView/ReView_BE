@@ -1,4 +1,4 @@
-package com.dgu.review.domain.peerFeedback.entity;
+package com.dgu.review.domain.peerfeedback.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.interview.entity.Recording;
