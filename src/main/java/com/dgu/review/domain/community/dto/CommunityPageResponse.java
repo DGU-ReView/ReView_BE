@@ -19,6 +19,5 @@ public class CommunityPageResponse {
     private String interviewPreps;
     private String answerStrategies;
     private String tips;
-    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
