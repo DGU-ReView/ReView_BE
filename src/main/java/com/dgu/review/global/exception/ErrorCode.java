@@ -21,32 +21,69 @@ public enum ErrorCode {
     // 세션에 녹음 없음
     SESSION_RECORDINGS_NOT_FOUND("SESSION_RECORDINGS_NOT_FOUND",
             HttpStatus.BAD_REQUEST, "해당 세션에 녹음이 존재하지 않습니다."),
-    
+
 	// 질문 없음
 	QUESTION_NOT_FOUND("QUESTION_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "해당 질문이 존재하지 않습니다."),
-	// 질문의 소유자가 아님 
-	FORBIDDEN_RESOURCE("FORBIDDEN_RESOURCE", 
+	// 질문의 소유자가 아님
+	FORBIDDEN_RESOURCE("FORBIDDEN_RESOURCE",
 			HttpStatus.FORBIDDEN, "해당 질문에 접근 권한이 없습니다."),
-	// 파일 이름에서 확장자 인식 불가 
+	// 파일 이름에서 확장자 인식 불가
 	RESUME_EXTENSION_MISSING("RESUME_EXTENSION_MISSING",
 		    HttpStatus.BAD_REQUEST, "파일 확장자를 인식할 수 없습니다. pdf 또는 docx 파일을 올려주세요."),
-	// 지원하지 않는 파일 형식 
+	// 지원하지 않는 파일 형식
 	RESUME_UNSUPPORTED_MEDIA_TYPE( "RESUME_UNSUPPORTED_MEDIA_TYPE",
 			HttpStatus.UNSUPPORTED_MEDIA_TYPE, "지원하지 않는 파일 형식입니다."),
-	// 저장소에서 자소서 찾을 수 없음 
+	// 저장소에서 자소서 찾을 수 없음
 	STORAGE_RESUME_NOT_FOUND( "STORAGE_RESUME_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "저장소에서 해당 자소서를 찾을 수 없습니다. "),
 	// 저장소에서 녹음 찾을 수 없음
 	STORAGE_RECORDING_NOT_FOUND( "STORAGE_RECORDING_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "저장소에서 해당 녹음 찾을 수 없습니다."),
-	FORBIDDEN_STORAGE("FORBIDDEN_STORAGE", 
+	FORBIDDEN_STORAGE("FORBIDDEN_STORAGE",
 			HttpStatus.FORBIDDEN, "해당 저장소에 접근 권한이 없습니다."),
 	// 저장소에서 자소서 찾을 수 없음
 	STORAGE_UNAVAILABLE( "STORAGE_UNAVAILABLE",
-			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. ");
-	
-	
+			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. "),
+
+    //커뮤니티에서 게시글 찾을 수 없음
+    COMMUNITY_PAGE_NOT_FOUND("COMMUNITY_PAGE_NOT_FOUND",
+            HttpStatus.NOT_FOUND, "해당 게시글을 찾을 수 없습니다."),
+
+    // 검색 결과 없음
+    COMMUNITY_SEARCH_NO_RESULT("COMMUNITY_SEARCH_NO_RESULT",
+            HttpStatus.NOT_FOUND, "검색 결과가 없습니다."),
+
+	//자소서 추출 실패 
+	RESUME_TEXT_EXTRACTION_FAILED( "RESUME_TEXT_EXTRACTION_FAILED",
+			HttpStatus.UNPROCESSABLE_ENTITY, "자소서 파일을 텍스트로 변환하는데에 실패하였습니다. "),
+	//자소서 비밀번호 요구 
+	RESUME_PASSWORD_REQUIRED( "RESUME_PASSWORD_REQUIRED",
+			HttpStatus.UNPROCESSABLE_ENTITY, "자소서가 비밀번호를 필요로 합니다. 비밀번호 제거 후 파일을 올려주세요."),
+	//자소서에 내용이 없음 
+	EMPTY_RESUME( "EMPTY_RESUME",
+				HttpStatus.UNPROCESSABLE_ENTITY, "자소서에 내용이 없습니다. "),
+	//사용자가 없음 
+	USER_NOT_FOUND("USER_NOT_FOUND",
+				HttpStatus.NOT_FOUND, "사용자가 없습니다."),
+
+	FOLLOWUP_QUESTION_NOT_FOUND("FOLLOWUP_QUESTION_NOT_FOUND",
+								 HttpStatus.BAD_REQUEST, "해당 질문에 꼬리질문이 존재하지 않습니다."),
+
+	ALREADY_IN_QUEUE_OR_DONE("ALREADY_IN_QUEUE_OR_DONE",
+			HttpStatus.BAD_REQUEST, "해당 녹음이 이미 큐에 존재하거나 처리가 완료되었습니다."),
+
+	RECORDING_ALREADY_PROCESSED("RECORDING_ALREADY_PROCESSED",
+			HttpStatus.BAD_REQUEST, "해당 id에 해당하는 녹음이 이미 처리되었습니다."),
+
+	REDIS_KEY_NOT_FOUND("REDIS_KEY_NOT_FOUND",
+			HttpStatus.BAD_REQUEST, "해당 key가 존재하지 않습니다."),
+
+	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
+			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
+
+	;
+
 	private final String code;
 	private final HttpStatus status;
 	private final String defaultMessage;
