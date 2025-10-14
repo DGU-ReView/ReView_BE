@@ -31,7 +31,7 @@ public class RecordingQueryService {
         InterviewQuestion root = getRoot(current);
         var status = statusService.getStatus(recordingId);
 
-        if (status == RecordingStatus.FAILED || status == null) {
+        if (status == RecordingStatus.FAILED || recording.getFailedAt() != null) {
             return RecordingResultsResponse.builder()
                     .sessionId(current.getInterviewSession().getId())
                     .status(ProgressStatus.FAILED)
@@ -39,21 +39,24 @@ public class RecordingQueryService {
                     .build();
         }
 
-        if (status != RecordingStatus.FOLLOWUP_GENERATED) {
+        boolean isSuccess = (status == RecordingStatus.FOLLOWUP_GENERATED) ||
+                (status == null && recording.getFailedAt() == null);
+
+        if (isSuccess) {
+            var next = decideNextPayload(current, root);
             return RecordingResultsResponse.builder()
                     .sessionId(current.getInterviewSession().getId())
-                    .status(ProgressStatus.WORKING)
-                    .next(null)
+                    .status(ProgressStatus.READY)
+                    .next(next)
                     .build();
         }
 
-        var next = decideNextPayload(current, root);
-
         return RecordingResultsResponse.builder()
                 .sessionId(current.getInterviewSession().getId())
-                .status(ProgressStatus.READY)
-                .next(next)
+                .status(ProgressStatus.WORKING)
+                .next(null)
                 .build();
+
     }
 
     private NextPayload decideNextPayload(InterviewQuestion current, InterviewQuestion currentRoot) {
