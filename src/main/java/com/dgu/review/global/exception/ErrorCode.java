@@ -44,9 +44,13 @@ public enum ErrorCode {
 			HttpStatus.FORBIDDEN, "해당 저장소에 접근 권한이 없습니다."),
 	// 저장소에서 자소서 찾을 수 없음
 	STORAGE_UNAVAILABLE( "STORAGE_UNAVAILABLE",
-			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. ");
-	
-	
+			HttpStatus.NOT_FOUND, "저장소에서 장애가 발생했습니다. "),
+
+	INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "해당 인터뷰가 존재하지 않습니다."),
+
+	;
+
 	private final String code;
 	private final HttpStatus status;
 	private final String defaultMessage;
