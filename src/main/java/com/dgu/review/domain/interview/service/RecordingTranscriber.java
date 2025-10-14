@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 
@@ -44,10 +45,10 @@ public class RecordingTranscriber {
     @Transactional
     @Async
     public void sttAsyncWorker(Long recordingId) {
-        try {
+        Recording recording = recordingRepo.findById(recordingId)
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
-            Recording recording = recordingRepo.findById(recordingId)
-                    .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+        try {
 
             long started = System.currentTimeMillis();
             log.info("[sttWorker:start] recordingId={}, thread={}, audioKey={}",
@@ -103,9 +104,11 @@ public class RecordingTranscriber {
 
             } else {
                 statusService.setStatus(recordingId, RecordingStatus.FAILED, Duration.ofMinutes(30));
+                recording.updateFailedAt(LocalDateTime.now());
             }
         } catch (Exception e) {
             statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
+            recording.updateFailedAt(LocalDateTime.now());
             log.error("STT 워커 실행 실패 recordingId={}", recordingId, e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }

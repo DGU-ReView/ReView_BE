@@ -31,7 +31,7 @@ public class RecordingQueryService {
         InterviewQuestion root = getRoot(current);
         var status = statusService.getStatus(recordingId);
 
-        if (status == RecordingStatus.FAILED || status == null) {
+        if (status == RecordingStatus.FAILED || recording.getFailedAt() != null) {
             return RecordingResultsResponse.builder()
                     .sessionId(current.getInterviewSession().getId())
                     .status(ProgressStatus.FAILED)
@@ -39,21 +39,24 @@ public class RecordingQueryService {
                     .build();
         }
 
-        if (status != RecordingStatus.FOLLOWUP_GENERATED) {
+        boolean isSuccess = (status == RecordingStatus.FOLLOWUP_GENERATED) ||
+                (status == null && recording.getFailedAt() == null);
+
+        if (isSuccess) {
+            var next = decideNextPayload(current, root);
             return RecordingResultsResponse.builder()
                     .sessionId(current.getInterviewSession().getId())
-                    .status(ProgressStatus.WORKING)
-                    .next(null)
+                    .status(ProgressStatus.READY)
+                    .next(next)
                     .build();
         }
 
-        var next = decideNextPayload(current, root);
-
         return RecordingResultsResponse.builder()
                 .sessionId(current.getInterviewSession().getId())
-                .status(ProgressStatus.READY)
-                .next(next)
+                .status(ProgressStatus.WORKING)
+                .next(null)
                 .build();
+
     }
 
     private NextPayload decideNextPayload(InterviewQuestion current, InterviewQuestion currentRoot) {
@@ -103,7 +106,16 @@ public class RecordingQueryService {
 
     private InterviewQuestion getRoot(InterviewQuestion q) {
         var cur = q;
-        while (cur.getParentQuestion() != null) cur = cur.getParentQuestion();
+        int depth = 0;
+
+        while (cur.getParentQuestion() != null) {
+            cur = cur.getParentQuestion();
+
+            if (++depth > 10) {
+                log.error("질문 데이터 순환 참조 의심. recordingId: {}", q.getRecording().getId());
+                throw new ApiException(ErrorCode.DATA_INTEGRITY_VIOLATED);
+            }
+        }
         return cur;
     }
 
