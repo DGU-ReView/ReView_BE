@@ -39,4 +39,15 @@ public class Recording extends BaseEntity {
 
     @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
+
+    public void attachToQuestion(InterviewQuestion question) {
+        this.interviewQuestion = question;
+        if (question != null && question.getRecording() != this) {
+            question.attachRecording(this);
+        }
+    }
+
+    public void attachSttText(String sttText) {
+        this.sttText = sttText;
+    }
 }

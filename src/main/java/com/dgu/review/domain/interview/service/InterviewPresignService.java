@@ -161,5 +161,14 @@ private String mapResumeContentType(String ext) {
 	        default     -> null; // 허용 아님
 	    };
 	}
+
+    public String getRecordingObjectKey(Long questionId) {
+        String redisKey = "presign:recording:" + questionId;
+        String key = redisTemplate.opsForValue().get(redisKey);
+        if (key == null) {
+            throw new ApiException(ErrorCode.REDIS_KEY_NOT_FOUND);
+        }
+        return key;
+    }
 }
 
