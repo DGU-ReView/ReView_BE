@@ -106,7 +106,16 @@ public class RecordingQueryService {
 
     private InterviewQuestion getRoot(InterviewQuestion q) {
         var cur = q;
-        while (cur.getParentQuestion() != null) cur = cur.getParentQuestion();
+        int depth = 0;
+
+        while (cur.getParentQuestion() != null) {
+            cur = cur.getParentQuestion();
+
+            if (++depth > 10) {
+                log.error("질문 데이터 순환 참조 의심. recordingId: {}", q.getRecording().getId());
+                throw new ApiException(ErrorCode.DATA_INTEGRITY_VIOLATED);
+            }
+        }
         return cur;
     }
 

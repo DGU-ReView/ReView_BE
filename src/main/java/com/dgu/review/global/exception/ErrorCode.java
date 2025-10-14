@@ -57,6 +57,10 @@ public enum ErrorCode {
 
 	REDIS_KEY_NOT_FOUND("REDIS_KEY_NOT_FOUND",
 			HttpStatus.BAD_REQUEST, "해당 key가 존재하지 않습니다."),
+
+	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
+			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
+
 	;
 	private final String code;
 	private final HttpStatus status;
