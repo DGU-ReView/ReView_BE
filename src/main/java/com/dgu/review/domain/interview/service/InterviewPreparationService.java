@@ -25,17 +25,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Slf4j
 public class InterviewPreparationService {
-
+	
     private final InterviewObjectReadService objectReadService;
     private final AutoDetectParser parser = new AutoDetectParser();
     private final RedisTemplate<String, String> redisTemplate;
     private final InterviewSessionRepository interviewSessionRepository;	
     private final UserRepository userRepository;
+    private static final String PRESIGN_RESUME_KEY_PREFIX = "presign:resume:";
 	
     @Transactional
     public String extractText(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
-    	String resumeObjectKey=redisTemplate.opsForValue().get("presign:resume:" + resumeId);
+    	String redisKey= PRESIGN_RESUME_KEY_PREFIX+resumeId;
+    	String resumeObjectKey=redisTemplate.opsForValue().get(redisKey);
     	// resumeObjectKey가 없을 경우 
     	if (resumeObjectKey == null || resumeObjectKey.isBlank()) {
 		    throw new ApiException(ErrorCode.STORAGE_RESUME_NOT_FOUND); 
