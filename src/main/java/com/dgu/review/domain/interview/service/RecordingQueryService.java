@@ -1,6 +1,8 @@
 package com.dgu.review.domain.interview.service;
 
-import com.dgu.review.domain.interview.dto.response.ContextStatus;
+import com.dgu.review.domain.interview.dto.response.NextPayload;
+import com.dgu.review.domain.interview.dto.response.NextQuestionType;
+import com.dgu.review.domain.interview.dto.response.ProgressStatus;
 import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -18,8 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class RecordingQueryService {
 
-    private static final int TOTAL_ROOTS = 4;
-
     private final RecordingRepository recordingRepo;
     private final RecordingStatusService statusService;
 
@@ -29,48 +29,75 @@ public class RecordingQueryService {
 
         InterviewQuestion current = recording.getInterviewQuestion();
         InterviewQuestion root = getRoot(current);
-
         var status = statusService.getStatus(recordingId);
-        var text = (status == RecordingStatus.COMPLETED || status == RecordingStatus.FOLLOWUP_GENERATED) ? recording.getSttText() : null;
 
-        var savedFollowUp = current.getFollowUpQuestion();
-        boolean followUpGenerated = (status == RecordingStatus.FOLLOWUP_GENERATED);
-
-        boolean followUpDone = followUpGenerated && savedFollowUp == null;
-
-        Long nextQuestionId = null;
-        String followUpQuestion = null;
-
-        if (followUpGenerated) {
-            if (followUpDone) {
-                nextQuestionId = findNextRootId(root);
-            } else {
-                nextQuestionId = savedFollowUp.getId();
-                followUpQuestion = savedFollowUp.getQuestion();
-            }
+        if (status == RecordingStatus.FAILED || status == null) {
+            return RecordingResultsResponse.builder()
+                    .sessionId(current.getInterviewSession().getId())
+                    .status(ProgressStatus.FAILED)
+                    .next(null)
+                    .build();
         }
 
-        boolean sessionCompleted = followUpDone && (nextQuestionId == null || root.getQuestionNumber() == TOTAL_ROOTS);
+        if (status != RecordingStatus.FOLLOWUP_GENERATED) {
+            return RecordingResultsResponse.builder()
+                    .sessionId(current.getInterviewSession().getId())
+                    .status(ProgressStatus.WORKING)
+                    .next(null)
+                    .build();
+        }
 
-        return new RecordingResultsResponse(
-                nextQuestionId,
-                status,
-                text,
-                followUpQuestion,
-                followUpDone,
-                new ContextStatus(
-                        current.getInterviewSession().getId(),
-                        sessionCompleted,
-                        root.getQuestionNumber()
-                ));
+        var next = decideNextPayload(current, root);
+
+        return RecordingResultsResponse.builder()
+                .sessionId(current.getInterviewSession().getId())
+                .status(ProgressStatus.READY)
+                .next(next)
+                .build();
     }
 
-    private Long findNextRootId(InterviewQuestion root) {
+    private NextPayload decideNextPayload(InterviewQuestion current, InterviewQuestion currentRoot) {
+        var savedFollowUp = current.getFollowUpQuestion();
+
+        // 꼬리질문 존재
+        if (savedFollowUp != null) {
+            return NextPayload.builder()
+                    .type(NextQuestionType.FOLLOW_UP)
+                    .nextQuestionId(savedFollowUp.getId())
+                    .nextQuestionText(savedFollowUp.getQuestion())
+                    .rootId(currentRoot.getId())
+                    .rootText(currentRoot.getQuestion())
+                    .rootIndex(currentRoot.getQuestionNumber())
+                    .build();
+        }
+
+        // 꼬리질문 x -> 다음 루트 질문
+        var nextRoot = findNextRoot(currentRoot);
+        if (nextRoot != null) {
+            return NextPayload.builder()
+                    .type(NextQuestionType.ROOT)
+                    .nextQuestionId(nextRoot.getId())
+                    .nextQuestionText(nextRoot.getQuestion())
+                    .rootId(nextRoot.getId())
+                    .rootText(nextRoot.getQuestion())
+                    .rootIndex(nextRoot.getQuestionNumber())
+                    .build();
+        }
+
+        // 더 이상 낼 질문이 없으면 NONE - 세션 종료
+        return NextPayload.builder()
+                .type(NextQuestionType.NONE)
+                .rootId(currentRoot.getId())
+                .rootText(currentRoot.getQuestion())
+                .rootIndex(currentRoot.getQuestionNumber())
+                .build();
+    }
+
+    private InterviewQuestion findNextRoot(InterviewQuestion root) {
         return root.getInterviewSession().getQuestions().stream()
                 .filter(q -> q.getParentQuestion() == null)
                 .filter(q -> q.getQuestionNumber() == root.getQuestionNumber() + 1)
                 .findFirst()
-                .map(InterviewQuestion::getId)
                 .orElse(null);
     }
 

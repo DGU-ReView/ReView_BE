@@ -1,13 +1,11 @@
 package com.dgu.review.domain.interview.dto.response;
 
-import com.dgu.review.domain.interview.entity.RecordingStatus;
+import lombok.Builder;
 
+@Builder
 public record RecordingResultsResponse (
-        Long nextQuestionId,
-        RecordingStatus status,
-        String sttText,
-        String followUpQuestion,
-        boolean followUpDone,
-        ContextStatus sessionStatus
+        Long sessionId, // 질문이 모두 끝났을 때 피드백 요청용
+        ProgressStatus status,
+        NextPayload next
 ){
 }
