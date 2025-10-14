@@ -32,8 +32,6 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 100)
     private String jobRole;
 
-    //private User user;
-
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
 
