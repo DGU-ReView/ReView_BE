@@ -1,6 +1,7 @@
 package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.dto.InterviewCreateRequest;
+import com.dgu.review.domain.interview.dto.response.ExtractedResume;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.user.entity.User;
@@ -34,7 +35,7 @@ public class InterviewPreparationService {
     private static final String PRESIGN_RESUME_KEY_PREFIX = "presign:resume:";
 	
     @Transactional
-    public String extractText(InterviewCreateRequest req) {
+    public ExtractedResume extract(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
     	String redisKey= PRESIGN_RESUME_KEY_PREFIX+resumeId;
     	String resumeObjectKey=redisTemplate.opsForValue().get(redisKey);
@@ -42,10 +43,8 @@ public class InterviewPreparationService {
     	if (resumeObjectKey == null || resumeObjectKey.isBlank()) {
 		    throw new ApiException(ErrorCode.STORAGE_RESUME_NOT_FOUND); 
 		}
-    	
-    	saveInterviewSession(req,resumeObjectKey);
-    	
-        // S3 열기 
+
+        // S3 열기
         try (var in = objectReadService.openResume(resumeObjectKey)) {
         	//자소서 변환 
             BodyContentHandler handler = new BodyContentHandler(-1); // 길이 제한 없음 
@@ -56,7 +55,7 @@ public class InterviewPreparationService {
             
             //자소서 필터링 
             String resumeText = resumeFilter(resumeId, extraction);
-            return resumeText;
+            return new ExtractedResume(resumeId, resumeObjectKey, resumeText);
             
         } catch (ApiException e) {
             // openResume에서 이미 발생한 에러 

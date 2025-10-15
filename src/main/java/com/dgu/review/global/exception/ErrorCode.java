@@ -54,16 +54,16 @@ public enum ErrorCode {
     COMMUNITY_SEARCH_NO_RESULT("COMMUNITY_SEARCH_NO_RESULT",
             HttpStatus.NOT_FOUND, "검색 결과가 없습니다."),
 
-	//자소서 추출 실패 
+	//자소서 추출 실패
 	RESUME_TEXT_EXTRACTION_FAILED( "RESUME_TEXT_EXTRACTION_FAILED",
 			HttpStatus.UNPROCESSABLE_ENTITY, "자소서 파일을 텍스트로 변환하는데에 실패하였습니다. "),
-	//자소서 비밀번호 요구 
+	//자소서 비밀번호 요구
 	RESUME_PASSWORD_REQUIRED( "RESUME_PASSWORD_REQUIRED",
 			HttpStatus.UNPROCESSABLE_ENTITY, "자소서가 비밀번호를 필요로 합니다. 비밀번호 제거 후 파일을 올려주세요."),
-	//자소서에 내용이 없음 
+	//자소서에 내용이 없음
 	EMPTY_RESUME( "EMPTY_RESUME",
 				HttpStatus.UNPROCESSABLE_ENTITY, "자소서에 내용이 없습니다. "),
-	//사용자가 없음 
+	//사용자가 없음
 	USER_NOT_FOUND("USER_NOT_FOUND",
 				HttpStatus.NOT_FOUND, "사용자가 없습니다."),
 
@@ -82,6 +82,17 @@ public enum ErrorCode {
 	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
 			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
 
+	INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "해당 인터뷰가 존재하지 않습니다."),
+
+	AI_FEEDBACK_ALREADY_EXIST("AI_FEEDBACK_ALREADY_EXIST",
+			HttpStatus.BAD_REQUEST, "해당 루트 질문에 대한 AI 피드백이 이미 존재합니다."),
+
+	LLM_INTERNAL_ERROR("LLM_INTERNAL_ERROR",
+			HttpStatus.INTERNAL_SERVER_ERROR, "LLM 호출 중 오류가 발생했습니다."),
+
+	LLM_RESPONSE_EMPTY("LLM_RESPONSE_EMPRY",
+			HttpStatus.INTERNAL_SERVER_ERROR, "LLM 응답이 비어있습니다."),
 	;
 
 	private final String code;

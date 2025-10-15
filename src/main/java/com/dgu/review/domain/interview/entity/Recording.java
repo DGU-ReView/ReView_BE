@@ -38,9 +38,6 @@ public class Recording extends BaseEntity {
     @JoinColumn(name = "interview_question_id", nullable = false)
     private InterviewQuestion interviewQuestion;
 
-    @OneToOne(mappedBy = "recording", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private AiFeedback aiFeedback;
-
     @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
 
