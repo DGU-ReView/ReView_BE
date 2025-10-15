@@ -28,14 +28,14 @@ public class InterviewService {
                         .questionNumber(q.getQuestionNumber())
                         .rootQuestion(q.getQuestion())
                         .sttText(q.getRecording().getSttText())
-                        //.aiFeedback(q.getAiFeedback())
-                        //.selfFeedback(q.getSelfFeedback()))
+                        .aiFeedback(q.getAiFeedback())
+                        .selfFeedback(q.getSelfFeedback())
                         .build()
                 ).collect(Collectors.toList());
 
         return GetInterviewResultsResponse.builder()
                 .interviewTitle(session.getTitle())
-                .timeoutQuestionNumber(1) // 엔티티 편집
+                .timeoutQuestionNumber(session.getTimeoutQuestionNumber())
                 .questionSummaries(questionSummaries)
                 .build();
     }
