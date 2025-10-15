@@ -81,6 +81,8 @@ public enum ErrorCode {
 
 	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
 			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
+	UNAUTHORIZED("UNAUTHORIZED",
+			HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.")
 
 	;
 
