@@ -17,7 +17,7 @@ import com.dgu.review.global.security.CustomUserDetails;
 @RequestMapping("/api")
 public class UserController {
 
-    @GetMapping("/me")
+    @GetMapping("/user/me")
     public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
         if (userDetails == null) {
         	throw new ApiException(ErrorCode.UNAUTHORIZED, "로그인이 필요합니다.");
