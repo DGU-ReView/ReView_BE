@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // CustomUserDetails 생성
                 CustomUserDetails userDetails = new CustomUserDetails(
-                        user.getId().toString(), 
+                        user.getId(), 
                         user.getUsername(),           
                         user.getEmail(),           
                         kakaoId

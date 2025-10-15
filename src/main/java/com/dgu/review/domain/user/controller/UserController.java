@@ -9,12 +9,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import com.dgu.review.global.security.CustomUserDetails;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class UserController {
 
     @GetMapping("/user/me")
@@ -32,4 +37,6 @@ public class UserController {
 
         return ResponseEntity.ok(result);
     }
+    
+    
 }

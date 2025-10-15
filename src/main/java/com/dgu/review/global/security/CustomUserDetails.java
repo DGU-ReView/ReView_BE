@@ -11,14 +11,14 @@ import java.util.Collections;
 @Getter
 public class CustomUserDetails implements UserDetails {
 
-    private String userId;
+    private Long userId;
     private String username;
     private String email;
     private String kakaoId;
     private Collection<? extends GrantedAuthority> authorities;  // 권한
 
     // User 객체를 기반으로 CustomUserDetails 객체 생성
-    public CustomUserDetails(String userId, String username, String email, String kakaoId) {
+    public CustomUserDetails(Long userId, String username, String email, String kakaoId) {
         this.userId = userId;
         this.username = username;
         this.email = email;
