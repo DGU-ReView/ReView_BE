@@ -153,14 +153,5 @@ public class SecurityConfig {
 		};
 	}
 
-	// JWT를 담을 HTTP-only 쿠키 생성
-	private Cookie createJwtCookie(String jwtToken) {
-		Cookie cookie = new Cookie("access_token", jwtToken);
-		cookie.setHttpOnly(true);
-		cookie.setSecure(false);
-		cookie.setPath("/");
-		cookie.setMaxAge(60 * 60 * 24);
-		return cookie;
-	}
 
 }
