@@ -39,5 +39,5 @@ public class User extends BaseEntity {
     private List<CommunityPage> communityPages = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<com.dgu.review.domain.peerfeedback.entity.PeerFeedback> peerFeedbacks = new ArrayList<>();
+    private List<com.dgu.review.domain.peerFeedback.entity.PeerFeedback> peerFeedbacks = new ArrayList<>();
 }

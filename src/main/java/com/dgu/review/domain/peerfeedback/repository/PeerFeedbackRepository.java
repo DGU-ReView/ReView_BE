@@ -1,7 +1,7 @@
-package com.dgu.review.domain.peerfeedback.repository;
+package com.dgu.review.domain.peerFeedback.repository;
 
 
-import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
+import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 import com.dgu.review.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
