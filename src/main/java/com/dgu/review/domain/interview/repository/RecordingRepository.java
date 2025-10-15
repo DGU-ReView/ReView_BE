@@ -18,4 +18,16 @@ public interface RecordingRepository extends JpaRepository<Recording, Long> {
     List<Recording> findAllByInterviewQuestion_InterviewSession_Id(Long sessionId);
 
     Optional<Recording> findByInterviewQuestion(InterviewQuestion interviewQuestion);
+
+    @Query("""
+    SELECT r FROM Recording r
+    JOIN FETCH r.interviewQuestion iq
+    JOIN FETCH iq.interviewSession s
+    WHERE iq.parentQuestion IS NULL
+      AND s.user.id <> :currentUserId
+    ORDER BY FUNCTION('RAND')
+    LIMIT 1
+""")
+    Optional<Recording> findRandomRootRecording(@Param("currentUserId") Long currentUserId);
+
 }
