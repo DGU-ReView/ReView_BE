@@ -14,10 +14,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 
 @AllArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenUtil jwtTokenUtil;
@@ -35,9 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 토큰 유효성 확인
             if (jwtTokenUtil.validateToken(token, kakaoId)) {
 
-                // User 조회 -> 실패시 실패 핸들러로 넘어감 
-                User user = userRepository.findByKakaoId(kakaoId)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
+                // User 조회 
+            	User user = userRepository.findUserByKakaoId(kakaoId);
+            	if (user == null) {
+            	    throw new RuntimeException("User not found");
+            	}
 
                 // CustomUserDetails 생성
                 CustomUserDetails userDetails = new CustomUserDetails(
@@ -81,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         }
-
+        
         return token;
     }
 }

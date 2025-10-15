@@ -6,13 +6,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
+
 import java.util.HashMap;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -28,6 +26,8 @@ import org.springframework.web.cors.CorsConfiguration;
 
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.global.security.CookieUtils;
+import com.dgu.review.global.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.dgu.review.global.security.JwtAuthenticationFilter;
 import com.dgu.review.global.security.JwtTokenUtil;
 
@@ -37,8 +37,11 @@ import com.dgu.review.global.security.JwtTokenUtil;
 public class SecurityConfig {
 	
 	private final JwtTokenUtil jwtTokenUtil;
-
-    
+	private final UserRepository userRepository;
+	@Bean
+	public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
+	    return new HttpCookieOAuth2AuthorizationRequestRepository();
+	}
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             AuthenticationSuccessHandler oAuth2SuccessHandler,
@@ -46,7 +49,8 @@ public class SecurityConfig {
                                             AuthenticationEntryPoint restAuthEntryPoint,
                                             AccessDeniedHandler restAccessDeniedHandler,
                                             JwtTokenUtil jwtTokenUtil,
-                                            UserRepository userRepository
+                                            UserRepository userRepository,
+                                            HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository
                                            ) throws Exception {
 
         return http
@@ -74,6 +78,9 @@ public class SecurityConfig {
                     .defaultAccessDeniedHandlerFor(restAccessDeniedHandler(), new AntPathRequestMatcher("/api/**"))
                 )
             .oauth2Login(oauth -> oauth
+            	.authorizationEndpoint(auth -> auth
+            	.authorizationRequestRepository(cookieAuthorizationRequestRepository)
+            	)
                 .successHandler(oAuth2SuccessHandler)
                 .failureHandler(oAuth2FailureHandler)
             )
@@ -91,16 +98,19 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler oAuth2SuccessHandler() {
         return (HttpServletRequest req, HttpServletResponse res, Authentication auth) -> {
             // 인증된 사용자 정보 가져오기
-            User user = (User) auth.getPrincipal();
-            String userName = user.getUsername();
-            Long userId=user.getId();
-            String kakaoId=user.getKakaoId();
+        	OAuth2User oAuth2User = (OAuth2User) auth.getPrincipal();
+        	String kakaoId = oAuth2User.getAttribute("id").toString();
+        	User user = userRepository.findUserByKakaoId(kakaoId);
+        	if (user == null) {
+        	    throw new RuntimeException("User not found");
+        	}
 
-            // JWT 생성
-            String jwtToken = jwtTokenUtil.generateToken(userId,userName, kakaoId, new HashMap<>());
+        	// JWT 생성
+        	String token = jwtTokenUtil.generateToken(user.getId(),  user.getKakaoId(), user.getUsername(), new HashMap<>());
 
-            // JWT를 HTTP-only 쿠키로 전달
-            res.addCookie(createJwtCookie(jwtToken));
+
+            // 쿠키로 전달
+            CookieUtils.addCookie(res, "access_token", token, 60 * 60 * 24); // 1일 만료
 
             // 성공 후 리다이렉트 // 프론트와 연동시 주석 해
 //            res.sendRedirect("http://localhost:3000/login/success"); 
@@ -109,7 +119,7 @@ public class SecurityConfig {
             // 200 OK + JSON 반환
             res.setContentType("application/json;charset=UTF-8");
             res.setStatus(HttpServletResponse.SC_OK);
-            res.getWriter().write("{\"message\": \"로그인 성공(프론트와 연동시 삭)\", \"userId\": \"" + userId + "\"}");
+            res.getWriter().write("{\"message\": \"로그인 성공(프론트와 연동시 삭제 )\", \"kakakId\": \"" + kakaoId + "\"}");
         };
     }
 
