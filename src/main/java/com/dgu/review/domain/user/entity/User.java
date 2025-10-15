@@ -30,7 +30,7 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name="kakao_id", nullable=false, length=64)
+    @Column(name="kakao_id", nullable=false, length=6, unique = true)
     private String kakaoId;
 
     @Column(length = 255)
