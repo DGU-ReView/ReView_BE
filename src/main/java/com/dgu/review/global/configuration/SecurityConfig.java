@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
 import com.dgu.review.global.security.CookieUtils;
+import com.dgu.review.global.security.CustomOAuth2UserService;
 import com.dgu.review.global.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.dgu.review.global.security.JwtAuthenticationFilter;
 import com.dgu.review.global.security.JwtTokenUtil;
@@ -47,7 +48,8 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationSuccessHandler oAuth2SuccessHandler,
 			AuthenticationFailureHandler oAuth2FailureHandler, AuthenticationEntryPoint restAuthEntryPoint,
 			AccessDeniedHandler restAccessDeniedHandler, JwtTokenUtil jwtTokenUtil, UserRepository userRepository,
-			HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository) throws Exception {
+			HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository,
+			CustomOAuth2UserService customOAuth2UserService) throws Exception {
 
 		return http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration config = new CorsConfiguration();
@@ -66,6 +68,7 @@ public class SecurityConfig {
 				.oauth2Login(oauth -> oauth
 						.authorizationEndpoint(
 								auth -> auth.authorizationRequestRepository(cookieAuthorizationRequestRepository))
+						.userInfoEndpoint(u -> u.userService(customOAuth2UserService))
 						.successHandler(oAuth2SuccessHandler).failureHandler(oAuth2FailureHandler))
 				.logout(logout -> logout.logoutUrl("/logout")
 						.logoutSuccessHandler((request, response, authentication) -> {
@@ -107,7 +110,7 @@ public class SecurityConfig {
 			// 200 OK + JSON 반환
 			res.setContentType("application/json;charset=UTF-8");
 			res.setStatus(HttpServletResponse.SC_OK);
-			res.getWriter().write("{\"message\": \"로그인 성공(프론트와 연동시 삭제 )\", \"kakakId\": \"" + kakaoId + "\"}");
+			res.getWriter().write("{\"message\": \"로그인 성공(프론트와 연동시 삭제 )\", \"kakaoId\": \"" + kakaoId + "\"}");
 		};
 	}
 
