@@ -62,4 +62,8 @@ public class InterviewQuestion extends BaseEntity {
     public void attachFollowUp(InterviewQuestion followUpQuestion) {
         this.followUpQuestion = followUpQuestion;
     }
+
+    public void attachAiFeedback(String aiFeedback) {
+        this.aiFeedback = aiFeedback;
+    }
 }

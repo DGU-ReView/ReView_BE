@@ -93,71 +93,78 @@ public class SttFeedbackService {
 
     }
 
-//    @Transactional
-//    @Async
-//    public String generateAiFeedback(Long questionId) {
-//
-//        InterviewQuestion interviewQuestion = interviewQuestionRepository.findById(questionId)
+    public String generateAiFeedbackForRoot(List<FeedbackJob.QAPair> chain) {
+
+//        InterviewQuestion root = interviewQuestionRepository.findById(rootQuestionId)
 //                .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND));
-//        String questionText = interviewQuestion.getQuestion();
+//        String questionText = root.getQuestion();
 //        String sttText = interviewQuestion.getRecording().getSttText();
 //        //자소서
-//
-//        var systemBlocks = List.of(
-//                SystemContentBlock.fromText("""
-//                        너는 모의면접 코치다. 다음 원칙을 지켜서 "한국어 줄글"로 피드백을 작성하라.
-//
-//                        - 톤: 전문적이되 친절하고 구체적. 불필요한 사족, 과도한 사과/면책 표현 금지.
-//                        - 길이: 8~12문장. (짧게 원하면 4~6문장, 길게 원하면 12~16문장)
-//                        - 구조(줄글, 소제목 없이 문단으로):
-//                          1) 질문의 의도와 핵심 평가 포인트를 먼저 간결히 짚는다.
-//                          2) 답변의 강점을 2~3가지 구체적 근거와 함께 설명한다.
-//                          3) 개선이 필요한 부분을 2~3가지 지적하고, 각 항목마다 바로 적용 가능한 수정 예시를 제시한다.
-//                          4) 마지막 문장에 한 줄 코칭 포인트로 마무리한다.
-//                        - 금지: JSON, 목록기호(•, -, 1.), 표, 코드블록, 과장/추측.
-//
-//                        필요 시 후보자 프로필(자소서 요약)을 맥락으로 참고하되, 원문 인용은 삼가고 핵심만 녹여서 평가하라.
-//                        """
-//                ));
-//
-//        var userMsg = Message.builder()
-//                .content(ContentBlock.fromText("면접 질문: " + questionText))
-//                .content(ContentBlock.fromText("지원자 답변(STT): " + sttText))
-//                .role(ConversationRole.USER)
-//                .build();
-//
-//        ConverseResponse resp = bedrockRuntimeClient.converse(
-//                ConverseRequest.builder()
-//                        .modelId(modelId)
-//                        .system(systemBlocks)
-//                        .messages(List.of(userMsg))
-//                        .inferenceConfig(config -> config
-//                                .maxTokens(150)
-//                                .temperature(0.5f)
-//                                .topP(0.8f)
-//                        ).build()
-//        );
-//
-//        String respText = "";
-//        var out = resp.output();
-//        if (out != null && out.message() != null && !out.message().content().isEmpty()) {
-//            var firstBlock = out.message().content().get(0);
-//            respText = firstBlock != null ? firstBlock.text() : "";
-//        }
-//
-//        var usage = resp.usage();
-//        int promptTokens = usage != null ? usage.inputTokens() : 0;
-//        int completionTokens = usage != null ? usage.outputTokens() : 0;
-//
-//        String stopReason = resp.stopReasonAsString();
-//        boolean truncated = "length".equalsIgnoreCase(stopReason);
-//
+
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < chain.size(); i++) {
+            var p = chain.get(i);
+            sb.append("Q").append(i+1).append(": ").append(p.q()).append("\n");
+            sb.append("A").append(i+1).append("(STT): ").append(p.a()).append("\n");
+        }
+
+        var systemBlocks = List.of(
+                SystemContentBlock.fromText("""
+                        너는 모의면접 코치다. 아래 선형 Q/A 체인을 종합해 다음 원칙을 지켜서 "한국어 줄글"로 피드백을 작성하라.
+
+                        - 톤: 전문적이되 친절하고 구체적. 불필요한 사족, 과도한 사과/면책 표현 금지.
+                        - 길이: 8~12문장
+                        - 구조(줄글, 소제목 없이 문단으로):
+                          1) 질문의 의도와 핵심 평가 포인트를 먼저 간결히 짚는다.
+                          2) 답변의 강점을 2~3가지 구체적 근거와 함께 설명한다.
+                          3) 개선이 필요한 부분을 2~3가지 지적하고, 각 항목마다 바로 적용 가능한 수정 예시를 제시한다.
+                          4) 마지막 문장에 한 줄 코칭 포인트로 마무리한다.
+                          5) 모든 꼬리질문까지의 누적 맥락을 일관되게 평가한다.
+                        - 금지: JSON, 목록기호(•, -, 1.), 표, 코드블록, 과장/추측.
+
+                        필요 시 후보자 프로필(자소서 요약)을 맥락으로 참고하되, 원문 인용은 삼가고 핵심만 녹여서 평가하라.
+                        """
+                ));
+
+        // 강조하고싶은 역량, 부족한 역량 부분 프롬프트에 추가
+
+        var userMsg = Message.builder()
+                .content(ContentBlock.fromText(sb.toString()))
+                .role(ConversationRole.USER)
+                .build();
+
+        ConverseResponse resp = bedrockRuntimeClient.converse(
+                ConverseRequest.builder()
+                        .modelId(modelId)
+                        .system(systemBlocks)
+                        .messages(List.of(userMsg))
+                        .inferenceConfig(config -> config
+                                .maxTokens(800)
+                                .temperature(0.5f)
+                                .topP(0.8f)
+                        ).build()
+        );
+
+        String respText = "";
+        var out = resp.output();
+        if (out != null && out.message() != null && !out.message().content().isEmpty()) {
+            var firstBlock = out.message().content().get(0);
+            respText = firstBlock != null ? firstBlock.text() : "";
+        }
+
+        var usage = resp.usage();
+        int promptTokens = usage != null ? usage.inputTokens() : 0;
+        int completionTokens = usage != null ? usage.outputTokens() : 0;
+
+        String stopReason = resp.stopReasonAsString();
+        boolean truncated = "length".equalsIgnoreCase(stopReason);
+
 //        log.info("[Bedrock] questionId={} promptTokens={} completionTokens={} stopReason={} truncated={}",
 //                questionId, promptTokens, completionTokens, stopReason, truncated);
-//
-//        return respText;
-//
-//    }
+
+        return respText;
+
+    }
 
 
 }

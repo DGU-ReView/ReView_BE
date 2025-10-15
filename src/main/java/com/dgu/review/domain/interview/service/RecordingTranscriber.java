@@ -18,6 +18,8 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -32,6 +34,7 @@ public class RecordingTranscriber {
     private final SttFeedbackService sttFeedbackService;
     private final InterviewQuestionRepository interviewQuestionRepository;
     private final InterviewObjectReadService interviewObjectReadService;
+    private final FeedbackJob feedbackJob;
 
 //    @Value("${stt.worker.base-url}")
 //    private String workerBaseUrl;
@@ -89,8 +92,8 @@ public class RecordingTranscriber {
 
                 String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
 
-                Optional.ofNullable(followUpQuestionText)
-                        .filter(text -> !"추가 질문이 필요하지 않습니다.".equals(text))
+                boolean createdFollowUp = Optional.ofNullable(followUpQuestionText)
+                        .filter(text -> !normalize(text).equals("추가 질문이 필요하지 않습니다"))
                         .map(text -> interviewQuestionRepository.save(
                                 InterviewQuestion.builder()
                                         .question(text)
@@ -98,7 +101,26 @@ public class RecordingTranscriber {
                                         .parentQuestion(recording.getInterviewQuestion())
                                         .build()
                         ))
-                        .ifPresent(recording.getInterviewQuestion()::attachFollowUp);
+                        .map(saved -> {
+                            recording.getInterviewQuestion().attachFollowUp(saved);
+                            return true;
+                        })
+                        .orElse(false);
+
+                if (!createdFollowUp) {
+                    InterviewQuestion rootQ = null;
+                    try {
+                        recordingRepo.flush();
+
+                        rootQ = getRoot(recording.getInterviewQuestion());
+                        if (rootQ.getAiFeedback() == null || rootQ.getAiFeedback().isBlank()) {
+                            feedbackJob.generateAiFeedbackAsync(rootQ.getId());
+                        }
+                    } catch(Exception e) {
+                        log.error("[feedback] async job failed, rootId={}", rootQ.getId(), e);
+                        // 재시도 큐
+                    }
+                }
 
                 statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 
@@ -112,6 +134,28 @@ public class RecordingTranscriber {
             log.error("STT 워커 실행 실패 recordingId={}", recordingId, e); // 내부 로그
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
+    }
+
+    private InterviewQuestion getRoot(InterviewQuestion q) {
+        var cur = q;
+        int depth = 0;
+
+        while (cur.getParentQuestion() != null) {
+            cur = cur.getParentQuestion();
+
+            if (++depth > 10) {
+                log.error("질문 데이터 순환 참조 의심. recordingId: {}", q.getRecording().getId());
+                throw new ApiException(ErrorCode.DATA_INTEGRITY_VIOLATED);
+            }
+        }
+        return cur;
+    }
+
+    private String normalize(String s) {
+        if (s == null) return "";
+        return s
+                .replaceAll("[\"'\\s.]+$", "") // 문자열 끝부분의 따옴표('"), 공백(\s), 마침표(.) 제거
+                .trim();                       // 앞뒤 공백 제거
     }
 
 }

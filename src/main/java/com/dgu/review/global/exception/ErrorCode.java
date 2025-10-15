@@ -86,6 +86,8 @@ public enum ErrorCode {
 	INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "해당 인터뷰가 존재하지 않습니다."),
 
+	AI_FEEDBACK_ALREADY_EXIST("AI_FEEDBACK_ALREADY_EXIST",
+			HttpStatus.BAD_REQUEST, "해당 루트 질문에 대한 AI 피드백이 이미 존재합니다.")
 	;
 
 	private final String code;
