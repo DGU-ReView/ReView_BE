@@ -35,6 +35,9 @@ public class PeerFeedback extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_pf_user"))
     private User user;
 
+    @Column(length = 100)
+    private String followUpQuestion;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_question_id", foreignKey = @ForeignKey(name="fk_pf_question"))
     private InterviewQuestion generatedQuestion;
