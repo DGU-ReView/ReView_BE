@@ -1,16 +1,18 @@
 package com.dgu.review.domain.interview.repository;
 
 
+import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.domain.Pageable;
 import java.util.List;
+import java.util.Optional;
 
 
 public interface RecordingRepository extends JpaRepository<Recording, Long> {
-
+    Optional<Recording> findByInterviewQuestion(InterviewQuestion interviewQuestion);
     // 전체 루트 녹음 갯수
     @Query("""
         SELECT COUNT(r)
