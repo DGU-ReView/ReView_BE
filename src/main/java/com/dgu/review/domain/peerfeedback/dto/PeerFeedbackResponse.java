@@ -14,6 +14,5 @@ public class PeerFeedbackResponse {
     private String body;              // 평가 본문
     private String followUpQuestion;  // 추가 질문
     private String jobRole;           // 피평가자 직무명
-    private String recordingUrl;      // 녹음 파일 URL
     private LocalDateTime createdAt;  // 작성 시각
 }

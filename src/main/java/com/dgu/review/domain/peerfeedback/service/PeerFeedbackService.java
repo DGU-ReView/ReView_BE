@@ -113,7 +113,6 @@ public class PeerFeedbackService {
                 feedback.getBody(),
                 feedback.getFollowUpQuestion(),
                 session.getJobRole(),
-                recordingUrl,
                 feedback.getCreatedAt()
         );
     }
