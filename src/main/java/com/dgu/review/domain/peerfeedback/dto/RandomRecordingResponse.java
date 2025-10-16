@@ -13,5 +13,5 @@ public class RandomRecordingResponse {
     private String question;        // 질문 내용
     private String sttText;         // 답변 텍스트(STT)
     private String jobRole;         // 직군
-
+    private String recordingUrl;    // S3 Presigned GET URL
 }

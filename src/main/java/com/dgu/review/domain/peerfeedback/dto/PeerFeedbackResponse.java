@@ -9,11 +9,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PeerFeedbackResponse {
-    private Long feedbackId;
-    private Long recordingId;
-    private Long evaluatorId;
-    private Long intervieweeId;
-    private String body;
-    private String followUpQuestion;
-    private LocalDateTime createdAt;
+    private Long feedbackId;          // 피드백 ID
+    private String question;          // 질문 내용
+    private String body;              // 평가 본문
+    private String followUpQuestion;  // 추가 질문
+    private String jobRole;           // 피평가자 직무명
+    private String recordingUrl;      // 녹음 파일 URL
+    private LocalDateTime createdAt;  // 작성 시각
 }

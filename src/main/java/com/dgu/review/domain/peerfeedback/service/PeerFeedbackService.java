@@ -14,9 +14,12 @@ import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import com.dgu.review.domain.interview.service.InterviewObjectReadService;
 
-import java.util.Optional;
+import java.util.Random;
+
 
 @Service
 @RequiredArgsConstructor
@@ -25,36 +28,52 @@ public class PeerFeedbackService {
 
     private final PeerFeedbackRepository peerFeedbackRepository;
     private final RecordingRepository recordingRepository;
+    private final InterviewObjectReadService interviewObjectReadService;
 
     /**
      * 랜덤 녹음 조회
      */
     public RandomRecordingResponse getRandomRecording(Long currentUserId) {
-        Recording randomRecording = recordingRepository.findRandomRootRecording(currentUserId)
-                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND, "평가할 녹음을 찾을 수 없습니다."));
+
+        long totalCount = recordingRepository.countRootRecordingsExcludingUser(currentUserId);
+        if (totalCount == 0) {
+            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+        }
+
+        int randomIndex = new Random().nextInt((int) totalCount);
+        var pageable = PageRequest.of(randomIndex, 1);
+
+        Recording randomRecording = recordingRepository
+                .findRootRecordingAtOffset(currentUserId, pageable)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
         InterviewQuestion question = randomRecording.getInterviewQuestion();
         InterviewSession session = question.getInterviewSession();
-        User interviewee = session.getUser();
+
+        String recordingUrl = interviewObjectReadService.createRecordingGetUrl(randomRecording.getObjectKey());
 
         return new RandomRecordingResponse(
                 randomRecording.getId(),
                 question.getQuestion(),
                 randomRecording.getSttText(),
-                session.getJobRole()
+                session.getJobRole(),
+                recordingUrl
         );
     }
 
     /**
      * 타인평가 저장
      */
-    public PeerFeedbackResponse createFeedback(Long recordingId, PeerFeedbackRequest request, User evaluator) {
+    @Transactional
+    public void createFeedback(Long recordingId, PeerFeedbackRequest request, User evaluator) {
         Recording recording = recordingRepository.findById(recordingId)
-                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND, "녹음 정보를 찾을 수 없습니다.")); // ✅ 수정
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
-        // 자기 자신 평가 방지
-        if (recording.getInterviewQuestion().getInterviewSession().getUser().getId().equals(evaluator.getId())) {
-            throw new ApiException(ErrorCode.BAD_REQUEST, "자기 자신의 답변은 평가할 수 없습니다."); // ✅ 수정
+        if (recording.getInterviewQuestion().getInterviewSession().getUser().getId()
+                .equals(evaluator.getId())) {
+            throw new ApiException(ErrorCode.SELF_FEEDBACK_NOT_ALLOWED);
         }
 
         PeerFeedback feedback = PeerFeedback.builder()
@@ -65,36 +84,36 @@ public class PeerFeedbackService {
                 .build();
 
         peerFeedbackRepository.save(feedback);
-
-        return new PeerFeedbackResponse(
-                feedback.getId(),
-                recording.getId(),
-                evaluator.getId(),
-                recording.getInterviewQuestion().getInterviewSession().getUser().getId(),
-                feedback.getBody(),
-                feedback.getFollowUpQuestion(),
-                feedback.getCreatedAt()
-        );
     }
 
     /**
      * 내가 작성한 평가 상세 조회
      */
     public PeerFeedbackResponse getFeedbackDetail(Long feedbackId) {
+
+        Long currentUserId = 1L;
         PeerFeedback feedback = peerFeedbackRepository.findById(feedbackId)
-                .orElseThrow(() -> new ApiException(ErrorCode.PEER_FEEDBACK_NOT_FOUND, "피드백 정보를 찾을 수 없습니다.")); // ✅ 새 항목 필요
+                .orElseThrow(() -> new ApiException(ErrorCode.PEER_FEEDBACK_NOT_FOUND));
+
+
+        if (!feedback.getUser().getId().equals(currentUserId)) {
+            throw new ApiException(ErrorCode.FORBIDDEN_RESOURCE);
+        }
 
         Recording recording = feedback.getRecording();
         InterviewQuestion question = recording.getInterviewQuestion();
-        Long intervieweeId = question.getInterviewSession().getUser().getId();
+        InterviewSession session = question.getInterviewSession();
+
+        String recordingUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
 
         return new PeerFeedbackResponse(
                 feedback.getId(),
-                recording.getId(),
-                feedback.getUser().getId(),
-                intervieweeId,
+                question.getQuestion(),
                 feedback.getBody(),
                 feedback.getFollowUpQuestion(),
+                session.getJobRole(),
+                recordingUrl,
                 feedback.getCreatedAt()
         );
     }

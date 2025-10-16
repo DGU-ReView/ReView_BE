@@ -37,7 +37,4 @@ public class PeerFeedback extends BaseEntity {
     @Column(length = 100)
     private String followUpQuestion;
 
-    @Column(nullable = false)
-    private int length; // 평가 내용 길이
-
 }
