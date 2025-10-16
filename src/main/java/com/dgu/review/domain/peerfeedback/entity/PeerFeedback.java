@@ -1,6 +1,7 @@
-package com.dgu.review.domain.peerfeedback.entity;
+package com.dgu.review.domain.peerFeedback.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.user.entity.User;
 import jakarta.persistence.*;
@@ -34,5 +35,11 @@ public class PeerFeedback extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_pf_user"))
     private User user;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "interview_question_id", foreignKey = @ForeignKey(name="fk_pf_question"))
+    private InterviewQuestion generatedQuestion;
 
+    public void attachGeneratedQuestion(InterviewQuestion q) {
+        this.generatedQuestion = q;
+    }
 }

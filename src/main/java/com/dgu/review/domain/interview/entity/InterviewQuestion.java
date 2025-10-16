@@ -1,6 +1,7 @@
 package com.dgu.review.domain.interview.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,6 +46,9 @@ public class InterviewQuestion extends BaseEntity {
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
+
+    @OneToOne(mappedBy = "generatedQuestion", fetch = FetchType.LAZY)
+    private PeerFeedback sourcePeerFeedback;
 
     public void attachRecording(Recording recording) {
         this.recording = recording;
