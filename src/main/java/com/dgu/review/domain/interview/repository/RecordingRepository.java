@@ -21,6 +21,8 @@ public interface RecordingRepository extends JpaRepository<Recording, Long> {
         JOIN iq.interviewSession s
         WHERE iq.parentQuestion IS NULL
           AND s.user.id <> :currentUserId
+          AND r.sttText IS NOT NULL
+          AND r.sttText <> ''
     """)
     long countRootRecordingsExcludingUser(@Param("currentUserId") Long currentUserId);
 
@@ -32,6 +34,9 @@ public interface RecordingRepository extends JpaRepository<Recording, Long> {
         JOIN FETCH iq.interviewSession s
         WHERE iq.parentQuestion IS NULL
           AND s.user.id <> :currentUserId
+          AND r.sttText IS NOT NULL
+          AND r.sttText <> ''
+        ORDER BY r.id
     """)
     List<Recording> findRootRecordingAtOffset(@Param("currentUserId") Long currentUserId, Pageable pageable);
 }
