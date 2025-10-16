@@ -1,9 +1,9 @@
-package com.dgu.review.domain.peerfeedback.controller;
+package com.dgu.review.domain.peerFeedback.controller;
 
-import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackRequest;
-import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackResponse;
-import com.dgu.review.domain.peerfeedback.dto.RandomRecordingResponse;
-import com.dgu.review.domain.peerfeedback.service.PeerFeedbackService;
+import com.dgu.review.domain.peerFeedback.dto.PeerFeedbackRequest;
+import com.dgu.review.domain.peerFeedback.dto.PeerFeedbackResponse;
+import com.dgu.review.domain.peerFeedback.dto.RandomRecordingResponse;
+import com.dgu.review.domain.peerFeedback.service.PeerFeedbackService;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
 import com.dgu.review.global.exception.ApiException;

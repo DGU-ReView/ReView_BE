@@ -1,4 +1,4 @@
-package com.dgu.review.domain.peerfeedback.dto;
+package com.dgu.review.domain.peerFeedback.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
