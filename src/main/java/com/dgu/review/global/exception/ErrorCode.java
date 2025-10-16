@@ -82,6 +82,13 @@ public enum ErrorCode {
 	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
 			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
 
+    PEER_FEEDBACK_NOT_FOUND("PEER_FEEDBACK_NOT_FOUND",
+            HttpStatus.NOT_FOUND, "해당 피드백 정보를 찾을 수 없습니다."),
+
+    SELF_FEEDBACK_NOT_ALLOWED("SELF_FEEDBACK_NOT_ALLOWED",
+            HttpStatus.BAD_REQUEST, "자기 자신의 답변은 평가할 수 없습니다."),
+
+
 	;
 
 	private final String code;
