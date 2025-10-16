@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.controller;
 
+import com.dgu.review.domain.interview.dto.response.GetRandomQuestionFeedbackResponse;
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionResponse;
 import com.dgu.review.domain.interview.service.RandomQuestionService;
 import com.dgu.review.global.response.ApiResponse;
@@ -22,6 +23,13 @@ public class RandomQuestionController {
             @PathVariable Long peerAnswerId
     ) {
         return ResponseEntity.ok(ApiResponse.ok(randomQuestionService.getRandomQuestion(peerAnswerId)));
+    }
+
+    @GetMapping("/{recordingId}/feedbacks")
+    public ResponseEntity<ApiResponse<GetRandomQuestionFeedbackResponse>> getRandomQuestionFeedback(
+            @PathVariable Long recordingId
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(randomQuestionService.getRandomQuestionFeedback(recordingId)));
     }
 
 

@@ -1,7 +1,10 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.dto.response.GetRandomQuestionFeedbackResponse;
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
+import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 import com.dgu.review.domain.peerFeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.global.exception.ApiException;
@@ -14,10 +17,8 @@ import org.springframework.stereotype.Service;
 public class RandomQuestionService {
 
     private final PeerFeedbackRepository peerFeedbackRepository;
-
-    public RandomQuestionService(PeerFeedbackRepository peerFeedbackRepository) {
-        this.peerFeedbackRepository = peerFeedbackRepository;
-    }
+    private final RecordingRepository recordingRepository;
+    private final InterviewObjectReadService interviewObjectReadService;
 
     public GetRandomQuestionResponse getRandomQuestion(Long peerAnswerId) {
         PeerFeedback peerFeedback = peerFeedbackRepository.findById(peerAnswerId)
@@ -46,5 +47,24 @@ public class RandomQuestionService {
 
         return new GetRandomQuestionResponse(question, context);
     }
+
+    public GetRandomQuestionFeedbackResponse getRandomQuestionFeedback(Long recordingId) {
+        Recording recording = recordingRepository.findById(recordingId)
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
+        String presignedRecordingGetUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
+        return GetRandomQuestionFeedbackResponse.builder()
+                .questionId(recording.getInterviewQuestion().getId())
+                .questionText(recording.getInterviewQuestion().getQuestion())
+                //.aiFeedback(recording.getAiFeedback())
+                //.selfFeedback(recording.getSelfFeedback())
+                .presignedRecordingGetUrl(presignedRecordingGetUrl)
+                .sttText(recording.getSttText())
+                .build();
+
+    }
+
+
 
 }
