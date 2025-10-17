@@ -42,6 +42,7 @@ public class InterviewStartService {
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         InterviewSession session = interviewSessionRepository.save(InterviewSession.builder()
+                .title(java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy년 MM월 dd일")))
                 .resumeObjectKey(resume.resumeObjectKey())
                 .mode(req.mode())
                 .jobRole(req.jobRole())
