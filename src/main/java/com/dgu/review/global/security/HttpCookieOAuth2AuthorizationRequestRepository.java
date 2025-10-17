@@ -33,7 +33,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 	                                     HttpServletRequest request1,
 	                                     HttpServletResponse response) {
 	    if (request == null) {
-	        CookieUtils.deleteCookie(request1, response, COOKIE_NAME);
+	        CookieUtils.deleteCookie(response, COOKIE_NAME);
 	    } else {
 	        CookieUtils.addCookie(response, COOKIE_NAME,
 	                CookieUtils.serialize(request), EXPIRE_SECONDS);
@@ -44,7 +44,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 	public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,
 	                                                             HttpServletResponse response) {
 	    OAuth2AuthorizationRequest req = this.loadAuthorizationRequest(request);
-	    CookieUtils.deleteCookie(request, response, COOKIE_NAME);
+	    CookieUtils.deleteCookie(response, COOKIE_NAME);
 	    return req;
 	}
 

@@ -73,7 +73,7 @@ public class SecurityConfig {
 				.logout(logout -> logout.logoutUrl("/logout")
 						.logoutSuccessHandler((request, response, authentication) -> {
 							// 로그아웃시 JWT 쿠키 삭제
-							CookieUtils.deleteCookie(request, response, "access_token");
+							CookieUtils.deleteCookie(response, "access_token");
 							// JSON 응답
 							response.setStatus(HttpServletResponse.SC_OK);
 							response.setContentType("application/json;charset=UTF-8");
