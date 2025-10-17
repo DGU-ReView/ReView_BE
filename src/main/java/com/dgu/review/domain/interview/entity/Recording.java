@@ -28,7 +28,7 @@ public class Recording extends BaseEntity {
     @Column(length = 1024)
     private String objectKey;
 
-    @Column(columnDefinition = "text", nullable = false)
+    @Column(columnDefinition = "text")
     private String sttText;
 
     @Column(name = "failed_at")
@@ -54,6 +54,10 @@ public class Recording extends BaseEntity {
 
     public void updateFailedAt(LocalDateTime failedAt) {
         this.failedAt = failedAt;
+    }
+
+    public void updateObjectKey(String objectKey) {
+        this.objectKey = objectKey;
     }
 
 }

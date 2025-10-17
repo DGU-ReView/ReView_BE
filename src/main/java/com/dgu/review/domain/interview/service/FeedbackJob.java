@@ -34,9 +34,10 @@ public class FeedbackJob {
             var chain = collectChainFromRoot(root);
             debugChain("AI", root, chain);
 
-            boolean allAnswered = chain.stream().allMatch(p -> p.a() != null && !p.a().isBlank());
-            if (!allAnswered) {
-                log.info("[feedback] some answers are blank, skip rootId={}", rootQuestionId);
+            boolean hasAnyAnswer = !chain.isEmpty();
+
+            if (!hasAnyAnswer) {
+                log.info("[feedback] no answers at root, skip rootId={}", rootQuestionId);
                 return;
             }
 
@@ -164,8 +165,9 @@ public class FeedbackJob {
         while (cur != null) {
             if (++depth > 100) throw new ApiException(ErrorCode.DATA_INTEGRITY_VIOLATED);
             String qText = cur.getQuestion() == null ? "" : cur.getQuestion();
-            String aText = (cur.getRecording() != null && cur.getRecording().getSttText() != null)
-                    ? cur.getRecording().getSttText() : "";
+            String aText = (cur.getRecording() == null) ? null : cur.getRecording().getSttText();
+
+            if (aText == null || aText.isBlank()) break;
             qa.add(new QAPair(qText, aText));
             cur = cur.getFollowUpQuestion();
         }

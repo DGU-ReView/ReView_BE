@@ -32,6 +32,11 @@ public class RecordingController {
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(ApiResponse.ok(response));
     }
 
+    @PostMapping("/questions/{questionId}/timeout")
+    public ResponseEntity<ApiResponse<RecordingCreateResponse>> timeout(@PathVariable Long questionId) {
+        return ResponseEntity.ok(ApiResponse.ok(recordingCommandService.markTimeout(questionId)));
+    }
+
     @GetMapping("/recordings/{recordingId}/results")
     public ResponseEntity<ApiResponse<RecordingResultsResponse>> getRecordingStatus(@PathVariable Long recordingId) {
         var res = recordingQueryService.getRecordingResults(recordingId);

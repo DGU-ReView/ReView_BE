@@ -44,4 +44,16 @@ public interface InterviewQuestionRepository extends JpaRepository<InterviewQues
 		String getAiFeedback();
 		String getSelfFeedback();
 	}
+
+	@Query("""
+    SELECT iq
+    FROM InterviewQuestion iq
+    JOIN FETCH iq.interviewSession s
+    LEFT JOIN FETCH iq.recording r
+    LEFT JOIN FETCH iq.followUpQuestion f
+    WHERE s.id = :sessionId
+      AND iq.parentQuestion IS NULL
+    ORDER BY iq.id
+""")
+	List<InterviewQuestion> findRootsBySessionId(@Param("sessionId") Long sessionId);
 }

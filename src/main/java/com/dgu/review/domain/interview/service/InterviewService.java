@@ -7,6 +7,7 @@ import com.dgu.review.domain.interview.dto.response.QuestionSummary;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
+import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,29 @@ public class InterviewService {
 
     private final InterviewSessionRepository interviewSessionRepository;
     private final InterviewQuestionRepository interviewQuestionRepository;
+    private final RecordingRepository recordingRepository;
 
     public GetInterviewResultsResponse getInterviewResults(Long sessionId) {
         InterviewSession session = interviewSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
 
-        if (interviewQuestionRepository.countRootsMissingFeedback(sessionId) != 0L) {
+        var roots = interviewQuestionRepository.findRootsBySessionId(sessionId);
+
+        boolean anyNeedingFeedback = roots.stream().anyMatch(root -> {
+            var stt = root.getRecording().getSttText();
+            boolean hasRootAnswer = stt != null && !stt.isBlank();
+
+            boolean feedbackMissing =
+                    (root.getAiFeedback() == null || root.getAiFeedback().isBlank())
+                    || (root.getSelfFeedback() == null || root.getSelfFeedback().isBlank());
+
+            return hasRootAnswer && feedbackMissing;
+        });
+
+        if (anyNeedingFeedback) {
             return new GetInterviewResultsResponse(ProgressStatus.WORKING, null);
         }
+
         List<QuestionSummary> questionSummaries =
                 interviewQuestionRepository.findOrderedRootSummaries(sessionId).stream()
                         .map(v -> QuestionSummary.builder()
@@ -42,7 +58,7 @@ public class InterviewService {
 
         InterviewSummary interviewSummary = InterviewSummary.builder()
                 .interviewTitle(session.getTitle())
-                .timeoutQuestionNumber(session.getTimeoutQuestionNumber())
+                .timeoutQuestionNumber(recordingRepository.countTimeoutsBySessionId(sessionId))
                 .questionSummaries(questionSummaries)
                 .build();
 

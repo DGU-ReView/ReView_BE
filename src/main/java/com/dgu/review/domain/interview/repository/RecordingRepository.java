@@ -18,4 +18,14 @@ public interface RecordingRepository extends JpaRepository<Recording, Long> {
     List<Recording> findAllByInterviewQuestion_InterviewSession_Id(Long sessionId);
 
     Optional<Recording> findByInterviewQuestion(InterviewQuestion interviewQuestion);
+
+    @Query("""
+          select count(r)
+          from Recording r
+          join r.interviewQuestion iq
+          join iq.interviewSession s
+          where s.id = :sessionId and r.sttText is null
+    """)
+    int countTimeoutsBySessionId(@Param("sessionId") Long sessionId);
+
 }

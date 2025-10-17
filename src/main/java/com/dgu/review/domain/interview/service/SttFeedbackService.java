@@ -38,6 +38,11 @@ public class SttFeedbackService {
         String sttText = interviewQuestion.getRecording().getSttText();
         //자소서
 
+        if (sttText == null || sttText.isBlank()) {
+            log.info("[followup] skip generation due to empty STT, qId={}", questionId);
+            return "추가 질문이 필요하지 않습니다.";
+        }
+
         var systemBlocks = List.of(
                 SystemContentBlock.fromText("""
                        너는 모의면접 코치다. 다음 원칙을 지켜서 "한국어 한 문장"으로 꼬리질문을 생성하라.
@@ -318,8 +323,8 @@ public class SttFeedbackService {
             } catch (SdkClientException sce) {
                 long jitter  = ThreadLocalRandom.current().nextLong(0, 600);
                 long backoff = Math.min(700L * i + jitter, cap);
-                log.warn("[bedrock] SdkClientException. retry {}/{} in {}ms, rootId={}",
-                        i, max, backoff, rootId, sce);
+                log.warn("[bedrock] SdkClientException. retry {}/{} in {}ms, rootId={}, msg={}",
+                        i, max, backoff, rootId, sce.getMessage());
                 sleepQuiet(backoff);
             }
         }
@@ -333,7 +338,7 @@ public class SttFeedbackService {
     private int estimateTokens(String s) {
         if (s == null) return 0;
         int chars = s.length();
-        return (int)Math.ceil(chars * 1.6); // 보수적으로
+        return (int)Math.ceil(chars * 1.6);
     }
 
     private void acquireTokensBudget(ConverseRequest req) {
