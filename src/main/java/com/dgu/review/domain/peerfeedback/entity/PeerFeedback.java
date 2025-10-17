@@ -34,5 +34,7 @@ public class PeerFeedback extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_pf_user"))
     private User user;
 
+    @Column(length = 100)
+    private String followUpQuestion;
 
 }
