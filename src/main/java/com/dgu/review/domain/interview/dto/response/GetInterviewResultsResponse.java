@@ -6,8 +6,7 @@ import java.util.List;
 
 @Builder
 public record GetInterviewResultsResponse (
-        String interviewTitle,
-        int timeoutQuestionNumber,
-        List<QuestionSummary> questionSummaries
+        ProgressStatus feedbackProgressStatus,
+        InterviewSummary interviewSummary
 ){
 }
