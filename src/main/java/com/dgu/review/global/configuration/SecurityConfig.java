@@ -53,7 +53,7 @@ public class SecurityConfig {
 
 		return http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration config = new CorsConfiguration();
-			config.addAllowedOrigin("http://localhost:3000"); // 프론트 도메인 -> 수정 필요
+			config.addAllowedOrigin("https://re-view-me.shop"); 
 			config.setAllowCredentials(true);
 			config.addAllowedHeader("*");
 			config.addAllowedMethod("*");
@@ -103,14 +103,9 @@ public class SecurityConfig {
 			// 쿠키로 전달
 			CookieUtils.addCookie(res, "access_token", token, 60 * 60 * 24); // 1일 만료
 
-			// 성공 후 리다이렉트 // 프론트와 연동시 주석 해
-//            res.sendRedirect("http://localhost:3000/login/success"); 
-
-			// 프론트와 연동시 삭제
-			// 200 OK + JSON 반환
-			res.setContentType("application/json;charset=UTF-8");
-			res.setStatus(HttpServletResponse.SC_OK);
-			res.getWriter().write("{\"message\": \"로그인 성공(프론트와 연동시 삭제 )\", \"kakaoId\": \"" + kakaoId + "\"}");
+			// 성공 후 리다이렉트 
+			log.info("로그인에 성공했습니다. kakaoId : {}", kakaoId);
+            res.sendRedirect("https://re-view-me.shop/"); 
 		};
 	}
 
@@ -119,16 +114,8 @@ public class SecurityConfig {
 		return (HttpServletRequest req, HttpServletResponse res, AuthenticationException ex) -> {
 			// 실패 로그
 			log.error("🚨OAuth2 login failed", ex);
-
-			// 프론트가 없으므로 JSON으로 반환 // 프론트 연동시 제거
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setContentType("application/json;charset=UTF-8");
-			String message = ex.getMessage() == null ? "oauth2_failed" : ex.getMessage();
-			res.getWriter().write("{\"error\":\"" + message + "\"}");
-
 			// 프론트 연동 시 사용할 리다이렉트 (주석 처리)
-			// res.sendRedirect("/login?error=" + (ex.getMessage() == null ? "oauth2_failed"
-			// : ex.getMessage()));
+			 res.sendRedirect("/login?error=" + (ex.getMessage() == null ? "oauth2_failed" : ex.getMessage()));
 		};
 	}
 
