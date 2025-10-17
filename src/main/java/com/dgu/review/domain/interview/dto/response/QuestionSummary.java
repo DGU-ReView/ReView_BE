@@ -2,12 +2,14 @@ package com.dgu.review.domain.interview.dto.response;
 
 import lombok.Builder;
 
+import java.util.List;
+
 @Builder
 public record QuestionSummary (
         int questionNumber,
         String rootQuestion,
-        String sttText,
         String aiFeedback,
-        String selfFeedback
+        String selfFeedback,
+        List<QnATurn> qnaTurns
 ){
 }
