@@ -1,21 +1,42 @@
 package com.dgu.review.domain.interview.repository;
 
+
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
+
 public interface RecordingRepository extends JpaRepository<Recording, Long> {
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("update Recording r set r.sttText = :text where r.id = :id")
-    int updateSttTextById(@Param("id") Long id, @Param("text") String text);
-
-    List<Recording> findAllByInterviewQuestion_InterviewSession_Id(Long sessionId);
-
     Optional<Recording> findByInterviewQuestion(InterviewQuestion interviewQuestion);
+    // 전체 루트 녹음 갯수
+    @Query("""
+        SELECT COUNT(r)
+        FROM Recording r
+        JOIN r.interviewQuestion iq
+        JOIN iq.interviewSession s
+        WHERE iq.parentQuestion IS NULL
+          AND s.user.id <> :currentUserId
+          AND r.sttText IS NOT NULL
+          AND r.sttText <> ''
+    """)
+    long countRootRecordingsExcludingUser(@Param("currentUserId") Long currentUserId);
+
+    // 특정 offset에서 1개만 조회
+    @Query("""
+        SELECT r
+        FROM Recording r
+        JOIN FETCH r.interviewQuestion iq
+        JOIN FETCH iq.interviewSession s
+        WHERE iq.parentQuestion IS NULL
+          AND s.user.id <> :currentUserId
+          AND r.sttText IS NOT NULL
+          AND r.sttText <> ''
+        ORDER BY r.id
+    """)
+    List<Recording> findRootRecordingAtOffset(@Param("currentUserId") Long currentUserId, Pageable pageable);
 }
