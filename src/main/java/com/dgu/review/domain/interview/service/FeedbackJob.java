@@ -2,7 +2,7 @@ package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
-import com.dgu.review.domain.peerFeedback.repository.PeerFeedbackRepository;
+import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
