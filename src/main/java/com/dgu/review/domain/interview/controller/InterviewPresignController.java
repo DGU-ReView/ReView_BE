@@ -14,6 +14,7 @@ import com.dgu.review.domain.interview.dto.RecordingUploadUrlRequest;
 import com.dgu.review.domain.interview.dto.RecordingUploadUrlResponse;
 import com.dgu.review.domain.interview.dto.ResumeUploadUrlResponse;
 import com.dgu.review.domain.interview.service.InterviewPresignService;
+import com.dgu.review.domain.user.service.GetUserService;
 
 
 
@@ -25,13 +26,13 @@ import com.dgu.review.domain.interview.service.InterviewPresignService;
 public class InterviewPresignController {
 
  private final InterviewPresignService interviewUploadService;
+ private final GetUserService getUserService;
 
  @PostMapping("/recording")
  public ResponseEntity<RecordingUploadUrlResponse> presignRecordPutUrl(
          @Valid @RequestBody RecordingUploadUrlRequest req
  ) {
-     // 목 userId
-     Long userId = 123L; 
+     Long userId = getUserService.getUserId(); 
 
      RecordingUploadUrlResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
      return ResponseEntity.ok(res);
@@ -39,9 +40,8 @@ public class InterviewPresignController {
  
  @PostMapping("/resume")
  public ResponseEntity<ResumeUploadUrlResponse> presignResumePutUrl(@RequestParam(name = "fileName", required = true) String fileName) {
-     // 목 userId
-     Long mocuserId = 123L; 
-     ResumeUploadUrlResponse res = interviewUploadService.createResumePutUrl(mocuserId, fileName);
+	 Long userId = getUserService.getUserId(); 
+     ResumeUploadUrlResponse res = interviewUploadService.createResumePutUrl(userId, fileName);
      return ResponseEntity.ok(res);
  }
 }
