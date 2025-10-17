@@ -81,6 +81,9 @@ public enum ErrorCode {
 
 	DATA_INTEGRITY_VIOLATED("DATA_INTEGRITY_VIOLATED",
 			HttpStatus.BAD_REQUEST, "데이터 순환 참조"),
+	// 인터뷰 세 없음
+    INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
+            HttpStatus.BAD_REQUEST, "인터뷰 세션이 없습니다."),
 
 	;
 
