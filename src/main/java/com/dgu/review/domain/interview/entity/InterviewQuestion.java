@@ -66,4 +66,8 @@ public class InterviewQuestion extends BaseEntity {
     public void attachAiFeedback(String aiFeedback) {
         this.aiFeedback = aiFeedback;
     }
+
+    public void attachSelfFeedback(String selfFeedback) {
+        this.selfFeedback = selfFeedback;
+    }
 }

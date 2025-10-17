@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
@@ -91,7 +94,7 @@ public class RecordingTranscriber {
                 statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
 
                 String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
-
+                String normalized = normalize(followUpQuestionText);
                 boolean createdFollowUp = Optional.ofNullable(followUpQuestionText)
                         .filter(text -> !normalize(text).equals("추가 질문이 필요하지 않습니다"))
                         .map(text -> interviewQuestionRepository.save(
@@ -107,18 +110,30 @@ public class RecordingTranscriber {
                         })
                         .orElse(false);
 
+                log.info("[followup] questionId={} raw='{}' normalized='{}' created={}",
+                        recording.getInterviewQuestion().getId(), safePreview(followUpQuestionText, 100), normalized, createdFollowUp);
+
                 if (!createdFollowUp) {
                     InterviewQuestion rootQ = null;
                     try {
                         recordingRepo.flush();
 
                         rootQ = getRoot(recording.getInterviewQuestion());
-                        if (rootQ.getAiFeedback() == null || rootQ.getAiFeedback().isBlank()) {
-                            feedbackJob.generateAiFeedbackAsync(rootQ.getId());
-                        }
+                        Long rootId = rootQ.getId();
+
+                        log.info("[feedback] will enqueue for rootId={} (from qId={}) path={}",
+                                rootQ.getId(), recording.getInterviewQuestion().getId(), dumpPathIds(recording.getInterviewQuestion()));
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                            @Override public void afterCommit() {
+                                log.info("[feedback] afterCommit enqueue rootId={}", rootId);
+                                feedbackJob.generateAiThenSelfAsync(rootId);
+                                //feedbackJob.generateAiFeedbackAsync(rootId);
+                                //feedbackJob.generateSelfFeedbackAsync(rootId);
+                            }
+                        });
+
                     } catch(Exception e) {
                         log.error("[feedback] async job failed, rootId={}", rootQ.getId(), e);
-                        // 재시도 큐
                     }
                 }
 
@@ -131,7 +146,7 @@ public class RecordingTranscriber {
         } catch (Exception e) {
             statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
             recording.updateFailedAt(LocalDateTime.now());
-            log.error("STT 워커 실행 실패 recordingId={}", recordingId, e); // 내부 로그
+            log.error("STT 워커 실행 실패 recordingId={}", recordingId, e);
             throw new RuntimeException("STT 워커 실행 실패", e);
         }
     }
@@ -151,11 +166,32 @@ public class RecordingTranscriber {
         return cur;
     }
 
+    // 문자열 끝부분 따옴표, 공백, 마침표, 앞뒤 공백 제거
     private String normalize(String s) {
         if (s == null) return "";
         return s
-                .replaceAll("[\"'\\s.]+$", "") // 문자열 끝부분의 따옴표('"), 공백(\s), 마침표(.) 제거
-                .trim();                       // 앞뒤 공백 제거
+                .replaceAll("[\"'\\s.]+$", "")
+                .trim();
     }
 
+    private String safePreview(String s, int max) {
+        if (s == null) return "";
+        s = s.replaceAll("\\s+", " ").trim();
+        return (s.length() <= max) ? s : s.substring(0, max) + "...";
+    }
+
+    private String dumpPathIds(InterviewQuestion q) {
+        try {
+            List<Long> ids = new ArrayList<>();
+            InterviewQuestion cur = q;
+            int guard = 0;
+            while (cur != null && guard++ < 50) {
+                ids.add(cur.getId());
+                cur = cur.getParentQuestion();
+            }
+            return ids.toString();
+        } catch (Exception e) {
+            return "[error building path]";
+        }
+    }
 }

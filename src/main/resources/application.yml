@@ -39,6 +39,8 @@ bedrock:
   max-tokens: 512
   temperature: 0.4
   topP: 0.9
+  limits:
+    tpm: 120000
 management:
   endpoints:
     web:
