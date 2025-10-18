@@ -2,8 +2,8 @@
   "family": "re-view-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["EC2"],
-  "cpu": "512",
-  "memory": "512",
+  "cpu": "1024",
+  "memory": "1536",
   "executionRoleArn": "arn:aws:iam::178735647226:role/ecsTaskExecutionRole",
   "taskRoleArn": "arn:aws:iam::178735647226:role/ReViewAppTaskRole",
   "containerDefinitions": [
