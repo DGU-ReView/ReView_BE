@@ -3,6 +3,7 @@ package com.dgu.review.domain.interview.service;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class FeedbackJob {
     private final InterviewQuestionRepository interviewQuestionRepository;
     private final SttFeedbackService sttFeedbackService;
     private final PeerFeedbackRepository peerFeedbackRepository;
+    private final GetUserService getUserService;
 
     @Async("llmExecutor")
     @Transactional
@@ -55,9 +57,10 @@ public class FeedbackJob {
 
             if (root.getSelfFeedback() == null || root.getSelfFeedback().isBlank()) {
                 debugChain("SELF", root, chain);
-                Long mockUserID = 1L;
+                Long userId = getUserService.getUserId();
+
                 List<String> myPeerFeedbacks =
-                        peerFeedbackRepository.findRecentContentsByWriter(mockUserID, PageRequest.of(0, 5));
+                        peerFeedbackRepository.findRecentContentsByWriter(userId, PageRequest.of(0, 5));
 
                 String selfFeedback = sttFeedbackService.generateSelfFeedbackForRoot(chain, myPeerFeedbacks, rootQuestionId);
                 if (selfFeedback == null || selfFeedback.isBlank()) {
@@ -138,9 +141,9 @@ public class FeedbackJob {
                 return;
             }
 
-            Long mockUserID = 1L;
+            Long userId = getUserService.getUserId();
             List<String> myPeerFeedbacks =
-                    peerFeedbackRepository.findRecentContentsByWriter(mockUserID, PageRequest.of(0, 5));
+                    peerFeedbackRepository.findRecentContentsByWriter(userId, PageRequest.of(0, 5));
 
             String selfFeedback = sttFeedbackService.generateSelfFeedbackForRoot(chain, myPeerFeedbacks, rootQuestionId
             );
