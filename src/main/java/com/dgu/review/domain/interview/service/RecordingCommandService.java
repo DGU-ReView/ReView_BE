@@ -1,6 +1,9 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.dto.response.NextPayload;
+import com.dgu.review.domain.interview.dto.response.ProgressStatus;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
+import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -25,6 +28,7 @@ public class RecordingCommandService {
     private final RecordingStatusService statusService;
     private final RecordingJobQueue recordingJobQueue;
     private final InterviewPresignService interviewPresignService;
+    private final NextQuestionPlanner nextQuestionPlanner;
 
     @PersistenceContext
     private EntityManager em;
@@ -36,11 +40,57 @@ public class RecordingCommandService {
     }
 
     @Transactional
+    public RecordingResultsResponse markTimeout(Long questionId) {
+        var question = em.find(InterviewQuestion.class, questionId);
+        if (question == null) {
+            throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND);
+        }
+
+        var existingOpt = recordingRepo.findByInterviewQuestion(question);
+        Recording rec;
+
+        if (existingOpt.isPresent()) {
+            rec = existingOpt.get();
+
+            if (rec.getSttText() != null && !rec.getSttText().isBlank()) {
+                throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
+            }
+
+            rec.attachSttText(null);
+        } else {
+            rec = Recording.builder()
+                    .objectKey(null)
+                    .sttText(null)
+                    .interviewQuestion(question)
+                    .build();
+            question.attachRecording(rec);
+            rec = recordingRepo.save(rec);
+
+        }
+
+        statusService.setStatus(rec.getId(), RecordingStatus.TIMEOUT, null);
+
+        NextPayload next = nextQuestionPlanner.decideNextPayload(question);
+
+        log.info("[timeout] questionId={}, sessionId={}, userId={}, nextQuestionId={}",
+                questionId,
+                question.getInterviewSession().getId(),
+                question.getInterviewSession().getUser().getId(),
+                next.nextQuestionId());
+
+        return RecordingResultsResponse.builder()
+                .sessionId(question.getInterviewSession().getId())
+                .status(ProgressStatus.READY)
+                .next(next)
+                .build();
+    }
+
+    @Transactional
     public RecordingCreateResponse enqueueRecordingJob(Long recordingId) {
 
         var cur = statusService.getStatus(recordingId);
-        if (cur == RecordingStatus.FAILED || cur == null) {
-            if (cur == RecordingStatus.FAILED) {
+        if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT || cur == null) {
+            if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT) {
                 statusService.clearStatus(recordingId);
             }
             boolean first = statusService.trySetUploadedIfAbsent(recordingId);
@@ -76,11 +126,13 @@ public class RecordingCommandService {
         if (existingRecording.isPresent()) {
             Recording r = existingRecording.get();
 
-            if (r.getSttText() != null && !r.getSttText().isEmpty()) {
+            if (r.getSttText() != null && !r.getSttText().isBlank()) {
                 throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
             }
 
-            throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+            r.updateObjectKey(interviewPresignService.getRecordingObjectKey(questionId));
+            r.attachSttText("");
+            return r;
         }
 
         var rec = Recording.builder()

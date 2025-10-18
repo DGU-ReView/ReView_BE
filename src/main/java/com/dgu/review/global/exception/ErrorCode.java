@@ -90,7 +90,6 @@ public enum ErrorCode {
     SELF_FEEDBACK_NOT_ALLOWED("SELF_FEEDBACK_NOT_ALLOWED",
             HttpStatus.BAD_REQUEST, "자기 자신의 답변은 평가할 수 없습니다."),
 
-
 	INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "해당 인터뷰가 존재하지 않습니다."),
 

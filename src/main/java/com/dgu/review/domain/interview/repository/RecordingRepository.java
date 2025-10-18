@@ -26,6 +26,15 @@ public interface RecordingRepository extends JpaRepository<Recording, Long> {
     """)
     long countRootRecordingsExcludingUser(@Param("currentUserId") Long currentUserId);
 
+    @Query("""
+          select count(r)
+          from Recording r
+          join r.interviewQuestion iq
+          join iq.interviewSession s
+          where s.id = :sessionId and r.sttText is null
+    """)
+    int countTimeoutsBySessionId(@Param("sessionId") Long sessionId);
+
     // 특정 offset에서 1개만 조회
     @Query("""
         SELECT r
