@@ -9,6 +9,7 @@ import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class InterviewStartService {
     private final InterviewQuestionRepository interviewQuestionRepository;
     private final UserRepository userRepository;
     private final InterviewSessionRepository interviewSessionRepository;
+    private final GetUserService getUserService;
 
     public StartInterviewResponse startInterview(InterviewCreateRequest req) {
 
@@ -37,7 +39,7 @@ public class InterviewStartService {
         ExtractedResume resume = interviewPreparationService.extract(req);
         log.info("자소서 텍스트:{}",resume.resumeText());
 
-        Long userId = 123L;
+        Long userId = getUserService.getUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
