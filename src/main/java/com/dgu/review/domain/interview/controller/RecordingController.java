@@ -33,7 +33,7 @@ public class RecordingController {
     }
 
     @PostMapping("/questions/{questionId}/timeout")
-    public ResponseEntity<ApiResponse<RecordingCreateResponse>> timeout(@PathVariable Long questionId) {
+    public ResponseEntity<ApiResponse<RecordingResultsResponse>> timeout(@PathVariable Long questionId) {
         return ResponseEntity.ok(ApiResponse.ok(recordingCommandService.markTimeout(questionId)));
     }
 

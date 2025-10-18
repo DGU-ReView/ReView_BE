@@ -1,6 +1,9 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.dto.response.NextPayload;
+import com.dgu.review.domain.interview.dto.response.ProgressStatus;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
+import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -25,6 +28,7 @@ public class RecordingCommandService {
     private final RecordingStatusService statusService;
     private final RecordingJobQueue recordingJobQueue;
     private final InterviewPresignService interviewPresignService;
+    private final NextQuestionPlanner nextQuestionPlanner;
 
     @PersistenceContext
     private EntityManager em;
@@ -36,37 +40,42 @@ public class RecordingCommandService {
     }
 
     @Transactional
-    public RecordingCreateResponse markTimeout(Long questionId) {
+    public RecordingResultsResponse markTimeout(Long questionId) {
         var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
             throw new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND);
         }
 
         var existingOpt = recordingRepo.findByInterviewQuestion(question);
-        if (existingOpt.isPresent()) {
-            var r = existingOpt.get();
+        Recording rec;
 
-            if (r.getSttText() != null && !r.getSttText().isBlank()) {
+        if (existingOpt.isPresent()) {
+            rec = existingOpt.get();
+
+            if (rec.getSttText() != null && !rec.getSttText().isBlank()) {
                 throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
             }
 
-            r.attachSttText(null);
-            statusService.setStatus(r.getId(), RecordingStatus.TIMEOUT, null);
-            return new RecordingCreateResponse(r.getId(), RecordingStatus.TIMEOUT.name());
+            rec.attachSttText(null);
+        } else {
+            rec = Recording.builder()
+                    .objectKey(null)
+                    .sttText(null)
+                    .interviewQuestion(question)
+                    .build();
+            question.attachRecording(rec);
+            rec = recordingRepo.save(rec);
+
         }
 
-        var rec = Recording.builder()
-                .objectKey(null)
-                .sttText(null)
-                .interviewQuestion(question)
+        statusService.setStatus(rec.getId(), RecordingStatus.TIMEOUT, null);
+
+        NextPayload next = nextQuestionPlanner.decideNextPayload(question);
+        return RecordingResultsResponse.builder()
+                .sessionId(question.getInterviewSession().getId())
+                .status(ProgressStatus.READY)
+                .next(next)
                 .build();
-
-        question.attachRecording(rec);
-        var saved = recordingRepo.save(rec);
-
-        statusService.setStatus(saved.getId(), RecordingStatus.TIMEOUT, null);
-
-        return new RecordingCreateResponse(saved.getId(), RecordingStatus.TIMEOUT.name());
     }
 
     @Transactional
