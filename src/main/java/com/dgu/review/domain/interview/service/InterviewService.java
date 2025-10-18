@@ -29,7 +29,8 @@ public class InterviewService {
         var roots = interviewQuestionRepository.findRootsBySessionId(sessionId);
 
         boolean anyNeedingFeedback = roots.stream().anyMatch(root -> {
-            var stt = root.getRecording().getSttText();
+            var rec = root.getRecording();
+            String stt = (rec != null) ? rec.getSttText() : null;
             boolean hasRootAnswer = stt != null && !stt.isBlank();
 
             boolean feedbackMissing =
