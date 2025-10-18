@@ -69,23 +69,7 @@ public class InterviewPreparationService {
         }
     }
     
-    // db에 인터뷰 섹션 저장 
-    private void saveInterviewSession(InterviewCreateRequest req,String resumeObjectKey) {
-    	//목 userId
-    	Long userId = 123L; 
-    	User user = userRepository.findById(userId)
-    				    .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-    	InterviewSession session = InterviewSession.builder() 
-    			        .resumeObjectKey(resumeObjectKey)
-    			        .mode(req.mode())
-    			        .jobRole(req.jobRole())
-    			        .user(user)
-    			        .build();
-
-    	interviewSessionRepository.save(session);
-    }
-    
-    // 자소서 필터링 
+    // 자소서 필터링
     private String resumeFilter(String resumeId, String text) {
     	
  		// 텍스트에 아무것도 없을 경우 
