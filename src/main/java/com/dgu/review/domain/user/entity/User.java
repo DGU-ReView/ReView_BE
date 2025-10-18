@@ -29,13 +29,13 @@ public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name="kakao_id", nullable=false, length=20, unique = true)
     private String kakaoId;
 
     @Column(length = 255)
     private String email;
-    
+
     @Column (length = 20)
     private String username;
 
@@ -47,7 +47,7 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
-    
+
     public void updateProfile(String email, String name) {
         this.email = email;
         this.username = name;
