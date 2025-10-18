@@ -71,6 +71,13 @@ public class RecordingCommandService {
         statusService.setStatus(rec.getId(), RecordingStatus.TIMEOUT, null);
 
         NextPayload next = nextQuestionPlanner.decideNextPayload(question);
+
+        log.info("[timeout] questionId={}, sessionId={}, userId={}, nextQuestionId={}",
+                questionId,
+                question.getInterviewSession().getId(),
+                question.getInterviewSession().getUser().getId(),
+                next.nextQuestionId());
+
         return RecordingResultsResponse.builder()
                 .sessionId(question.getInterviewSession().getId())
                 .status(ProgressStatus.READY)
