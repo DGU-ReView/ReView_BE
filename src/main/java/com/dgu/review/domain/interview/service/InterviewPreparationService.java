@@ -55,7 +55,7 @@ public class InterviewPreparationService {
             
             //자소서 필터링 
             String resumeText = resumeFilter(resumeId, extraction);
-            return new ExtractedResume(resumeId, resumeObjectKey, resumeText);
+            return new ExtractedResume(resumeObjectKey, resumeText);
             
         } catch (ApiException e) {
             // openResume에서 이미 발생한 에러 
