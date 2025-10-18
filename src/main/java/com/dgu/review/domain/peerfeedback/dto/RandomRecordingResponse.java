@@ -1,4 +1,4 @@
-package com.dgu.review.domain.peerFeedback.dto;
+package com.dgu.review.domain.peerfeedback.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

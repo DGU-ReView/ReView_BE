@@ -33,6 +33,12 @@ public class InterviewQuestion extends BaseEntity {
     @Column(nullable = false)
     private boolean followUpDone = false;
 
+    @Column(columnDefinition = "text", name = "ai_feedback")
+    private String aiFeedback;
+
+    @Column(columnDefinition = "text", name = "self_feedback")
+    private String selfFeedback;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_session_id", nullable = false)
     private InterviewSession interviewSession;
@@ -59,5 +65,13 @@ public class InterviewQuestion extends BaseEntity {
 
     public void attachFollowUp(InterviewQuestion followUpQuestion) {
         this.followUpQuestion = followUpQuestion;
+    }
+
+    public void attachAiFeedback(String aiFeedback) {
+        this.aiFeedback = aiFeedback;
+    }
+
+    public void attachSelfFeedback(String selfFeedback) {
+        this.selfFeedback = selfFeedback;
     }
 }

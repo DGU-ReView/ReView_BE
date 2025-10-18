@@ -3,8 +3,8 @@ package com.dgu.review.domain.user.entity;
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.interview.entity.InterviewSession;
+import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 
-import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -30,8 +30,14 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 255)
+    @Column(name="kakao_id", nullable=false, length=20, unique = true)
+    private String kakaoId;
+
+    @Column(length = 255)
     private String email;
+
+    @Column (length = 20)
+    private String username;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewSession> interviewSessions = new ArrayList<>();
@@ -41,4 +47,9 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
+
+    public void updateProfile(String email, String name) {
+        this.email = email;
+        this.username = name;
+    }
 }

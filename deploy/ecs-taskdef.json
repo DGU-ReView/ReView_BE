@@ -3,7 +3,7 @@
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["EC2"],
   "cpu": "512",
-  "memory": "1024",
+  "memory": "512",
   "executionRoleArn": "arn:aws:iam::178735647226:role/ecsTaskExecutionRole",
   "taskRoleArn": "arn:aws:iam::178735647226:role/ReViewAppTaskRole",
   "containerDefinitions": [
@@ -22,7 +22,12 @@
         { "name": "DATABASE_URL", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_URL::" },
         { "name": "DATABASE_USERNAME", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_USERNAME::" },
         { "name": "DATABASE_PASSWORD", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:DATABASE_PASSWORD::" },
-        { "name": "REDIS_HOST", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:REDIS_HOST::" }
+        { "name": "REDIS_HOST", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:REDIS_HOST::" },
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:JWT_SECRET::" },
+        { "name": "REDIRECT_URI", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:REDIRECT_URI::" },
+        { "name": "KAKAO_CLIENT_ID", "valueFrom": "arn:aws:secretsmanager:ap-northeast-2:178735647226:secret:review/env-qMnXuO:KAKAO_CLIENT_ID::" }
+
+
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
