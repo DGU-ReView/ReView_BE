@@ -1,13 +1,13 @@
-package com.dgu.review.domain.peerFeedback.service;
+package com.dgu.review.domain.peerfeedback.service;
 
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.entity.Recording;
-import com.dgu.review.domain.peerFeedback.dto.PeerFeedbackRequest;
-import com.dgu.review.domain.peerFeedback.dto.PeerFeedbackResponse;
-import com.dgu.review.domain.peerFeedback.dto.RandomRecordingResponse;
-import com.dgu.review.domain.peerFeedback.entity.PeerFeedback;
-import com.dgu.review.domain.peerFeedback.repository.PeerFeedbackRepository;
+import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackRequest;
+import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackResponse;
+import com.dgu.review.domain.peerfeedback.dto.RandomRecordingResponse;
+import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
+import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.global.exception.ApiException;
