@@ -90,13 +90,17 @@ public enum ErrorCode {
     SELF_FEEDBACK_NOT_ALLOWED("SELF_FEEDBACK_NOT_ALLOWED",
             HttpStatus.BAD_REQUEST, "자기 자신의 답변은 평가할 수 없습니다."),
 
-
-
 	INTERVIEW_SESSION_NOT_FOUND("INTERVIEW_SESSION_NOT_FOUND",
 			HttpStatus.NOT_FOUND, "해당 인터뷰가 존재하지 않습니다."),
 
 	AI_FEEDBACK_ALREADY_EXIST("AI_FEEDBACK_ALREADY_EXIST",
-			HttpStatus.BAD_REQUEST, "해당 루트 질문에 대한 AI 피드백이 이미 존재합니다.")
+			HttpStatus.BAD_REQUEST, "해당 루트 질문에 대한 AI 피드백이 이미 존재합니다."),
+
+	LLM_INTERNAL_ERROR("LLM_INTERNAL_ERROR",
+			HttpStatus.INTERNAL_SERVER_ERROR, "LLM 호출 중 오류가 발생했습니다."),
+
+	LLM_RESPONSE_EMPTY("LLM_RESPONSE_EMPRY",
+			HttpStatus.INTERNAL_SERVER_ERROR, "LLM 응답이 비어있습니다."),
 	;
 
 	private final String code;
