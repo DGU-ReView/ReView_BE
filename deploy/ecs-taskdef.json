@@ -11,8 +11,6 @@
       "name": "app",
       "image": "<IMAGE>",
       "essential": true,
-      "memoryReservation": 1024,
-      "memory": 1792,
       "portMappings": [
         { "containerPort": 8080, "protocol": "tcp" }
       ],
