@@ -2,8 +2,6 @@
   "family": "re-view-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["EC2"],
-  "cpu": "1024",
-  "memory": "1536",
   "executionRoleArn": "arn:aws:iam::178735647226:role/ecsTaskExecutionRole",
   "taskRoleArn": "arn:aws:iam::178735647226:role/ReViewAppTaskRole",
   "containerDefinitions": [
@@ -11,6 +9,9 @@
       "name": "app",
       "image": "<IMAGE>",
       "essential": true,
+      "cpu": 1024,
+      "memoryReservation": 1024,
+      "memory": 2816,
       "portMappings": [
         { "containerPort": 8080, "protocol": "tcp" }
       ],
