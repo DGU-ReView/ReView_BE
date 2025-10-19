@@ -68,7 +68,6 @@ public class InterviewPreparationService {
             throw new ApiException(ErrorCode.RESUME_TEXT_EXTRACTION_FAILED);
         }
     }
-
     private String resumeFilter(String resumeId, String text) {
     	
  		// 텍스트에 아무것도 없을 경우 
