@@ -4,6 +4,7 @@ import com.dgu.review.domain.community.dto.*;
 import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.community.entity.DomainCategory;
 import com.dgu.review.domain.community.repository.CommunityPageRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
@@ -27,6 +28,7 @@ public class CommunityPageService {
 
     private final CommunityPageRepository communityRepo;
     private final EntityManager em;
+    private final GetUserService getUserService;
 
     private static final Sort LATEST = Sort.by(Sort.Direction.DESC, "updatedAt");
 
@@ -109,7 +111,7 @@ public class CommunityPageService {
     @Transactional
     public Long create(CommunityPageCreateRequest req) {
         //로그인 사용자 정보로 대체 예정. 현재는 테스트용 id=1로 적어둠.
-        var authorRef = em.getReference(com.dgu.review.domain.user.entity.User.class, 1L);
+        var authorRef = em.getReference(com.dgu.review.domain.user.entity.User.class, getUserService.getUserId());
 
         String autoTitle = String.format("%s %s %s",
                 req.getCompanyName(),

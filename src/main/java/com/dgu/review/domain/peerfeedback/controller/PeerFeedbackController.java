@@ -6,6 +6,7 @@ import com.dgu.review.domain.peerfeedback.dto.RandomRecordingResponse;
 import com.dgu.review.domain.peerfeedback.service.PeerFeedbackService;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import com.dgu.review.global.response.ApiResponse;
@@ -22,6 +23,7 @@ public class PeerFeedbackController {
 
     private final PeerFeedbackService peerFeedbackService;
     private final UserRepository userRepository;
+    private final GetUserService getUserService;
     /**
      * 랜덤 평가 대상 조회
      */
@@ -29,7 +31,7 @@ public class PeerFeedbackController {
     public ResponseEntity<ApiResponse<RandomRecordingResponse>> getRandomRecording() {
 
         // 임시
-        Long currentUserId = 1L; // 추후 교체
+        Long currentUserId = getUserService.getUserId(); // 추후 교체
 
         var res = peerFeedbackService.getRandomRecording(currentUserId);
         return ResponseEntity.ok(ApiResponse.ok(res));
@@ -44,7 +46,7 @@ public class PeerFeedbackController {
             @Valid @RequestBody PeerFeedbackRequest request
     ) {
         // 로그인 미구현 상태이므로 evaluator 하드코딩
-        User evaluator = userRepository.findById(1L)
+        User evaluator = userRepository.findById(getUserService.getUserId())
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
         peerFeedbackService.createFeedback(recordingId, request, evaluator);

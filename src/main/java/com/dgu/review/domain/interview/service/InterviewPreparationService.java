@@ -5,6 +5,7 @@ import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 
@@ -32,7 +33,7 @@ public class InterviewPreparationService {
     private final InterviewSessionRepository interviewSessionRepository;	
     private final UserRepository userRepository;
     private static final String PRESIGN_RESUME_KEY_PREFIX = "presign:resume:";
-	
+    private final GetUserService getUserService;
     @Transactional
     public String extractText(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
@@ -73,7 +74,7 @@ public class InterviewPreparationService {
     // db에 인터뷰 섹션 저장 
     private void saveInterviewSession(InterviewCreateRequest req,String resumeObjectKey) {
     	//목 userId
-    	Long userId = 123L; 
+    	Long userId = getUserService.getUserId();
     	User user = userRepository.findById(userId)
     				    .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
     	InterviewSession session = InterviewSession.builder() 

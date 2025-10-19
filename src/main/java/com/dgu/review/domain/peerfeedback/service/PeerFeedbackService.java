@@ -10,6 +10,7 @@ import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.user.entity.User;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
@@ -85,13 +86,13 @@ public class PeerFeedbackService {
 
         peerFeedbackRepository.save(feedback);
     }
-
+    private final GetUserService getUserService;
     /**
      * 내가 작성한 평가 상세 조회
      */
     public PeerFeedbackResponse getFeedbackDetail(Long feedbackId) {
 
-        Long currentUserId = 1L;
+        Long currentUserId = getUserService.getUserId();
         PeerFeedback feedback = peerFeedbackRepository.findById(feedbackId)
                 .orElseThrow(() -> new ApiException(ErrorCode.PEER_FEEDBACK_NOT_FOUND));
 
