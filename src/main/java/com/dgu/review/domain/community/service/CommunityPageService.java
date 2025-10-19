@@ -108,7 +108,6 @@ public class CommunityPageService {
     // 글 생성 (title 자동 생성)
     @Transactional
     public Long create(CommunityPageCreateRequest req) {
-        //로그인 사용자 정보로 대체 예정. 현재는 테스트용 id=1로 적어둠.
         var authorRef = em.getReference(com.dgu.review.domain.user.entity.User.class, 1L);
 
         String autoTitle = String.format("%s %s %s",

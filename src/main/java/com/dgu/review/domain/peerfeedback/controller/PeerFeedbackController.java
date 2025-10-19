@@ -43,7 +43,6 @@ public class PeerFeedbackController {
             @PathVariable Long recordingId,
             @Valid @RequestBody PeerFeedbackRequest request
     ) {
-        // 로그인 미구현 상태이므로 evaluator 하드코딩
         User evaluator = userRepository.findById(1L)
                 .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
 
