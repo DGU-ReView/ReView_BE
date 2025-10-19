@@ -5,6 +5,7 @@ import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.community.entity.DomainCategory;
 import com.dgu.review.domain.community.repository.CommunityPageRepository;
 import com.dgu.review.domain.user.service.GetUserService;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import jakarta.persistence.EntityManager;
@@ -112,6 +113,7 @@ public class CommunityPageService {
     public Long create(CommunityPageCreateRequest req) {
 
         var authorRef = em.getReference(com.dgu.review.domain.user.entity.User.class, getUserService.getUserId());
+
 
         String autoTitle = String.format("%s %s %s",
                 req.getCompanyName(),

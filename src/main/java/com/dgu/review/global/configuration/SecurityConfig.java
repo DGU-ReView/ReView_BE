@@ -54,12 +54,13 @@ public class SecurityConfig {
 		return http.csrf(csrf -> csrf.disable()).cors(cors -> cors.configurationSource(request -> {
 			CorsConfiguration config = new CorsConfiguration();
 			config.addAllowedOrigin("https://re-view-me.shop"); 
+			config.addAllowedOrigin("https://api.re-view-me.shop");
 			config.setAllowCredentials(true);
 			config.addAllowedHeader("*");
 			config.addAllowedMethod("*");
 			return config;
 		})).authorizeHttpRequests(auth -> auth
-				.requestMatchers("/", "/health", "/favicon.ico", "/error", "/oauth2/authorization/kakao",
+				.requestMatchers("/", "/health", "/favicon.ico", "/error", "/oauth2/authorization/kakao", "/actuator/health",
 						"/login/oauth2/code/kakao", "/swagger-ui/**", "/v3/api-docs/**")
 				.permitAll().anyRequest().authenticated())
 				.exceptionHandling(e -> e
@@ -114,7 +115,7 @@ public class SecurityConfig {
 		return (HttpServletRequest req, HttpServletResponse res, AuthenticationException ex) -> {
 			// 실패 로그
 			log.error("🚨OAuth2 login failed", ex);
-			// 프론트 연동 시 사용할 리다이렉트 (주석 처리)
+			// 프론트 연동 시 사용할 리다이렉트 
 			 res.sendRedirect("/login?error=" + (ex.getMessage() == null ? "oauth2_failed" : ex.getMessage()));
 		};
 	}
