@@ -57,7 +57,7 @@ public class FeedbackJob {
 
             if (root.getSelfFeedback() == null || root.getSelfFeedback().isBlank()) {
                 debugChain("SELF", root, chain);
-                Long userId = getUserService.getUserId();
+                Long userId = root.getInterviewSession().getUser().getId();
 
                 List<String> myPeerFeedbacks =
                         peerFeedbackRepository.findRecentContentsByWriter(userId, PageRequest.of(0, 5));
