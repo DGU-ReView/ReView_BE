@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dgu.review.domain.myarchive.dto.CursorPageResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
+import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
 import com.dgu.review.domain.myarchive.service.MyInterviewService;
@@ -34,6 +35,10 @@ public class MyInterviewController {
 	}
 	
 	// 나의 면접 상세 조회 - 전체 요약
+	@GetMapping("/{interviewId}/summary")
+    public MyInterviewSummaryResponse getSummary(@PathVariable Long sessionId) {
+        return myInterviewService.getMyInterviewSummary(sessionId);
+    }
 	// 나의 면접 상세 조회 - 질문별 답변 조회 
 	// 나의 면접 상세 조회 - 질문별 피드백 조회 
 	// 나의 면접 상세 조회 - 랜덤 질문 답변 조회 
