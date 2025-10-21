@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.myarchive.dto.AnswerCheckItem;
 import com.dgu.review.domain.myarchive.dto.CursorPageResponse;
@@ -36,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MyInterviewService {
 
     private final InterviewSessionRepository interviewSessionRepository;
+    private final InterviewQuestionRepository interviewQuestionRepository;
     private final GetUserService getUserService;
     private final InterviewGetUrlService interviewGetUrlService;
     
@@ -129,7 +131,50 @@ public class MyInterviewService {
                 .firstQuestionThread(firstThread)
                 .build();
     }
+    // 면접 조회 - 답변 확인
+    @Transactional
+    public List<AnswerCheckItem> getMyInterviewAnswer(Long questionId) {
+        Long userId = getUserService.getUserId();
 
+        InterviewQuestion start = interviewQuestionRepository
+                .findByIdAndUserId(questionId, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND));
+
+        // 루트 질문이 아닐 경우 
+        InterviewQuestion root = start;
+        Set<Long> guard = new HashSet<>();
+        while (root.getParentQuestion() != null && (root.getId() == null || guard.add(root.getId()))) {
+            root = root.getParentQuestion();
+        }
+
+        //루트부터 followUp 체인 내려가기
+        List<InterviewQuestion> chain = new ArrayList<>();
+        guard.clear();
+        InterviewQuestion cur = root;
+        while (cur != null && (cur.getId() == null || guard.add(cur.getId()))) {
+            chain.add(cur);
+            cur = cur.getFollowUpQuestion();
+        }
+
+        final int[] orderIdx = {1};
+        return chain.stream().map(q -> {
+            Recording rec = q.getRecording();
+            String answerText = (rec != null) ? rec.getSttText() : null;
+
+            String recordUrl = null;
+            if (rec != null && rec.getObjectKey() != null) {
+                recordUrl = interviewGetUrlService.createRecordingGetUrl(rec.getObjectKey());
+            }
+
+            return AnswerCheckItem.builder()
+                    .order(orderIdx[0]++)
+                    .questionId(q.getId())
+                    .question(q.getQuestion())
+                    .answerText(answerText)
+                    .recordUrl(recordUrl)
+                    .build();
+        }).toList();
+    }
 
     
     // 면접 제목 수정 
