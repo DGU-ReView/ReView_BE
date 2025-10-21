@@ -120,6 +120,54 @@ public class RecordingTranscriber {
         }
     }
 
+    @Transactional
+    @Async
+    public void sttAsyncWorkerForRandom(Long recordingId) {
+        Recording recording = recordingRepo.findById(recordingId)
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
+        try {
+            log.info("[SttWorkerForRandom:start] recordingId={}, thread={}, audioKey={}",
+                    recordingId, Thread.currentThread().getName(), recording.getObjectKey());
+
+            statusService.setStatus(recordingId, RecordingStatus.TRANSCRIBING, null);
+
+            String audioPresignedUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
+            String sttText = sttExecutionService.executeTranscribe(recordingId, audioPresignedUrl);
+
+            recording.attachSttText(sttText);
+            statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
+
+            InterviewQuestion randomQuestion = recording.getInterviewQuestion();
+
+            try {
+                recordingRepo.flush();
+
+
+                log.info("[feedback] will enqueue for randomQuestionId={} (from qId={}) path={}",
+                        randomQuestion.getId(), recording.getInterviewQuestion().getId(), dumpPathIds(recording.getInterviewQuestion()));
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override public void afterCommit() {
+                        log.info("[feedback] afterCommit enqueue randomQuestionId={}", randomQuestion.getId());
+                        feedbackJob.generateAiThenSelfAsync(randomQuestion.getId());
+                        //feedbackJob.generateAiFeedbackAsync(rootId);
+                        //feedbackJob.generateSelfFeedbackAsync(rootId);
+                    }
+                });
+
+            } catch(Exception e) {
+                log.error("[feedback] async job failed, rootId={}", randomQuestion.getId(), e);
+            }
+
+            statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
+
+        } catch (Exception e) {
+            statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
+            recording.updateFailedAt(LocalDateTime.now());
+        }
+    }
+
     private InterviewQuestion getRoot(InterviewQuestion q) {
         var cur = q;
         int depth = 0;
@@ -152,11 +200,19 @@ public class RecordingTranscriber {
     private String dumpPathIds(InterviewQuestion q) {
         try {
             List<Long> ids = new ArrayList<>();
-            InterviewQuestion cur = q;
+            Optional<InterviewQuestion> currentOpt = Optional.of(q);
             int guard = 0;
-            while (cur != null && guard++ < 50) {
-                ids.add(cur.getId());
-                cur = cur.getParentQuestion();
+            while (currentOpt.isPresent() && guard++ < 50) {
+                InterviewQuestion current = currentOpt.get();
+                ids.add(current.getId());
+
+                InterviewQuestion parentProxy = current.getParentQuestion();
+
+                if (parentProxy != null) {
+                    currentOpt = interviewQuestionRepository.findById(parentProxy.getId());
+                } else {
+                    currentOpt = Optional.empty();
+                }
             }
             return ids.toString();
         } catch (Exception e) {

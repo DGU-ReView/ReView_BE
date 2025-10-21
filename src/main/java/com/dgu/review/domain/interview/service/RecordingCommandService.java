@@ -40,6 +40,12 @@ public class RecordingCommandService {
     }
 
     @Transactional
+    public RecordingCreateResponse createAndTranscribeForRandom(Long questionId) {
+        Recording saved = saveRecording(questionId);
+        return enqueueRecordingJobForRandom(saved.getId());
+    }
+
+    @Transactional
     public RecordingResultsResponse markTimeout(Long questionId) {
         var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
@@ -104,6 +110,34 @@ public class RecordingCommandService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override public void afterCommit() {
                     recordingJobQueue.enqueue(recordingId);
+                }
+            });
+
+            return new RecordingCreateResponse(recordingId, statusService.getStatus(recordingId).name());
+
+        }
+
+        throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+    }
+
+    @Transactional
+    public RecordingCreateResponse enqueueRecordingJobForRandom(Long recordingId) {
+        var cur = statusService.getStatus(recordingId);
+        if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT || cur == null) {
+            if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT) {
+                statusService.clearStatus(recordingId);
+            }
+            boolean first = statusService.trySetUploadedIfAbsent(recordingId);
+
+            if (!first) {
+                throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+            }
+
+            log.info("[enqueue] dispatch async worker recordingId={}", recordingId);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    recordingJobQueue.enqueueForRandom(recordingId);
                 }
             });
 
