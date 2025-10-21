@@ -31,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/myarchive/myinterviews")
 public class MyInterviewController {
 	private final MyInterviewService myInterviewService;
-	// 응답 형식 바꾸기 
 	// 나의 면접 리스트 조회
 	@GetMapping
 	public ResponseEntity<ApiResponse<CursorPageResponse<MyInterviewListItemResponse>>> getinterviewList(
