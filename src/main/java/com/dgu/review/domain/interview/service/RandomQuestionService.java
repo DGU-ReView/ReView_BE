@@ -4,6 +4,7 @@ import com.dgu.review.domain.interview.dto.response.GetRandomQuestionFeedbackRes
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
@@ -19,19 +20,18 @@ public class RandomQuestionService {
     private final PeerFeedbackRepository peerFeedbackRepository;
     private final RecordingRepository recordingRepository;
     private final InterviewObjectReadService interviewObjectReadService;
+    private final InterviewQuestionRepository interviewQuestionRepository;
 
     public GetRandomQuestionResponse getRandomQuestion(Long peerAnswerId) {
         PeerFeedback peerFeedback = peerFeedbackRepository.findById(peerAnswerId)
                 .orElseThrow(() -> new ApiException(ErrorCode.PEER_FEEDBACK_NOT_FOUND));
 
-        InterviewQuestion interviewQuestion = InterviewQuestion.builder()
-                //.question(peerFeedback.getFollowUpQuestion) 타인평가에 추가된 필드
+        InterviewQuestion interviewQuestion = interviewQuestionRepository.save(InterviewQuestion.builder()
+                .question(peerFeedback.getFollowUpQuestion())
                 .interviewSession(peerFeedback.getRecording().getInterviewQuestion().getInterviewSession())
                 .parentQuestion(peerFeedback.getRecording().getInterviewQuestion())
                 .sourcePeerFeedback(peerFeedback)
-                .build();
-
-
+                .build());
 
         GetRandomQuestionResponse.Question question = new GetRandomQuestionResponse.Question(
                 interviewQuestion.getId(),
@@ -57,8 +57,8 @@ public class RandomQuestionService {
         return GetRandomQuestionFeedbackResponse.builder()
                 .questionId(recording.getInterviewQuestion().getId())
                 .questionText(recording.getInterviewQuestion().getQuestion())
-                //.aiFeedback(recording.getAiFeedback())
-                //.selfFeedback(recording.getSelfFeedback())
+                .aiFeedback(recording.getInterviewQuestion().getAiFeedback())
+                .selfFeedback(recording.getInterviewQuestion().getSelfFeedback())
                 .presignedRecordingGetUrl(presignedRecordingGetUrl)
                 .sttText(recording.getSttText())
                 .build();
