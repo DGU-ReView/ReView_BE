@@ -96,8 +96,8 @@ public class RecordingTranscriber {
                     rootQ = getRoot(recording.getInterviewQuestion());
                     Long rootId = rootQ.getId();
 
-                    log.info("[feedback] will enqueue for rootId={} (from qId={}) path={}",
-                            rootQ.getId(), recording.getInterviewQuestion().getId(), dumpPathIds(recording.getInterviewQuestion()));
+                    log.info("[feedback] will enqueue for rootId={} (from qId={})",
+                            rootQ.getId(), recording.getInterviewQuestion().getId());
                     TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                         @Override public void afterCommit() {
                             log.info("[feedback] afterCommit enqueue rootId={}", rootId);
@@ -145,8 +145,8 @@ public class RecordingTranscriber {
                 recordingRepo.flush();
 
 
-                log.info("[feedback] will enqueue for randomQuestionId={} (from qId={}) path={}",
-                        randomQuestion.getId(), recording.getInterviewQuestion().getId(), dumpPathIds(recording.getInterviewQuestion()));
+                log.info("[feedback] will enqueue for randomQuestionId={} (from qId={})",
+                        randomQuestion.getId(), recording.getInterviewQuestion().getId());
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override public void afterCommit() {
                         log.info("[feedback] afterCommit enqueue randomQuestionId={}", randomQuestion.getId());
@@ -163,6 +163,7 @@ public class RecordingTranscriber {
             statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 
         } catch (Exception e) {
+            log.error("[stt] async job failed, recordingId={}", recording.getId(), e);
             statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
             recording.updateFailedAt(LocalDateTime.now());
         }
@@ -197,26 +198,4 @@ public class RecordingTranscriber {
         return (s.length() <= max) ? s : s.substring(0, max) + "...";
     }
 
-    private String dumpPathIds(InterviewQuestion q) {
-        try {
-            List<Long> ids = new ArrayList<>();
-            Optional<InterviewQuestion> currentOpt = Optional.of(q);
-            int guard = 0;
-            while (currentOpt.isPresent() && guard++ < 50) {
-                InterviewQuestion current = currentOpt.get();
-                ids.add(current.getId());
-
-                InterviewQuestion parentProxy = current.getParentQuestion();
-
-                if (parentProxy != null) {
-                    currentOpt = interviewQuestionRepository.findById(parentProxy.getId());
-                } else {
-                    currentOpt = Optional.empty();
-                }
-            }
-            return ids.toString();
-        } catch (Exception e) {
-            return "[error building path]";
-        }
-    }
 }

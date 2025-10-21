@@ -1,9 +1,12 @@
 package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionFeedbackResponse;
+import com.dgu.review.domain.interview.dto.response.ProgressStatus;
+import com.dgu.review.domain.interview.dto.response.RandomQuestionFeedbackResult;
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.entity.RecordingStatus;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
@@ -21,6 +24,7 @@ public class RandomQuestionService {
     private final RecordingRepository recordingRepository;
     private final InterviewObjectReadService interviewObjectReadService;
     private final InterviewQuestionRepository interviewQuestionRepository;
+    private final RecordingStatusService recordingStatusService;
 
     public GetRandomQuestionResponse getRandomQuestion(Long peerAnswerId) {
         PeerFeedback peerFeedback = peerFeedbackRepository.findById(peerAnswerId)
@@ -52,16 +56,29 @@ public class RandomQuestionService {
         Recording recording = recordingRepository.findById(recordingId)
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
-        String presignedRecordingGetUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+        if (recording.getFailedAt() != null) {
+            return new GetRandomQuestionFeedbackResponse(ProgressStatus.FAILED, null);
+        }
 
-        return GetRandomQuestionFeedbackResponse.builder()
-                .questionId(recording.getInterviewQuestion().getId())
-                .questionText(recording.getInterviewQuestion().getQuestion())
-                .aiFeedback(recording.getInterviewQuestion().getAiFeedback())
-                .selfFeedback(recording.getInterviewQuestion().getSelfFeedback())
-                .presignedRecordingGetUrl(presignedRecordingGetUrl)
-                .sttText(recording.getSttText())
-                .build();
+        if (recordingStatusService.getStatus(recordingId) == RecordingStatus.FOLLOWUP_GENERATED
+        && recording.getInterviewQuestion().getAiFeedback() != null
+        && recording.getInterviewQuestion().getSelfFeedback() != null) {
+            String presignedRecordingGetUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
+            RandomQuestionFeedbackResult result = RandomQuestionFeedbackResult.builder()
+                    .questionId(recording.getInterviewQuestion().getId())
+                    .questionText(recording.getInterviewQuestion().getQuestion())
+                    .aiFeedback(recording.getInterviewQuestion().getAiFeedback())
+                    .selfFeedback(recording.getInterviewQuestion().getSelfFeedback())
+                    .presignedRecordingGetUrl(presignedRecordingGetUrl)
+                    .sttText(recording.getSttText())
+                    .build();
+
+            return new GetRandomQuestionFeedbackResponse(ProgressStatus.READY, result);
+        }
+
+        return new GetRandomQuestionFeedbackResponse(ProgressStatus.WORKING, null);
+
 
     }
 

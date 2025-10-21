@@ -1,6 +1,7 @@
 package com.dgu.review.domain.interview.controller;
 
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionFeedbackResponse;
+import com.dgu.review.domain.interview.dto.response.RandomQuestionFeedbackResult;
 import com.dgu.review.domain.interview.dto.response.GetRandomQuestionResponse;
 import com.dgu.review.domain.interview.dto.response.RecordingCreateResponse;
 import com.dgu.review.domain.interview.service.RandomQuestionService;
@@ -25,7 +26,6 @@ public class RandomQuestionController {
         return ResponseEntity.ok(ApiResponse.ok(randomQuestionService.getRandomQuestion(peerAnswerId)));
     }
 
-    // question에 대한 피드백 조회 로직으로 변경 고려 | 이걸 폴링으로 사용
     @GetMapping("/recordings/{recordingId}/feedbacks")
     public ResponseEntity<ApiResponse<GetRandomQuestionFeedbackResponse>> getRandomQuestionFeedback(
             @PathVariable Long recordingId
@@ -39,6 +39,5 @@ public class RandomQuestionController {
     ) {
         return ResponseEntity.ok(ApiResponse.ok(recordingCommandService.createAndTranscribeForRandom(questionId)));
     }
-
 
 }
