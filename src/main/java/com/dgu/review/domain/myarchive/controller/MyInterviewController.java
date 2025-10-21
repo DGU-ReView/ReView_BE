@@ -17,6 +17,7 @@ import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
+import com.dgu.review.domain.myarchive.dto.MyinterviewFeedbackResponse;
 import com.dgu.review.domain.myarchive.service.MyInterviewService;
 import com.dgu.review.global.response.ApiResponse;
 
@@ -53,6 +54,12 @@ public class MyInterviewController {
         return ResponseEntity.ok(ApiResponse.ok(res));
     }
 	// 나의 면접 상세 조회 - 질문별 피드백 조회 
+	@GetMapping("/questions/{questionId}/feedback")
+    public ResponseEntity<ApiResponse<MyinterviewFeedbackResponse>> getQuestionFeedback(@PathVariable Long questionId) {
+		MyinterviewFeedbackResponse res = myInterviewService.getQuestionFeedback(questionId);
+		return ResponseEntity.ok(ApiResponse.ok(res));
+    }
+	
 	// 나의 면접 상세 조회 - 랜덤 질문 답변 조회 
 
 	// 나의 면접 제목 수정

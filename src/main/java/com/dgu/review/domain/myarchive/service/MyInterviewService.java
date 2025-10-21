@@ -1,10 +1,12 @@
 package com.dgu.review.domain.myarchive.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -22,7 +24,9 @@ import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
+import com.dgu.review.domain.myarchive.dto.MyinterviewFeedbackResponse;
 import com.dgu.review.domain.myarchive.dto.RootQuestionCard;
+import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -40,7 +44,7 @@ public class MyInterviewService {
     private final InterviewQuestionRepository interviewQuestionRepository;
     private final GetUserService getUserService;
     private final InterviewGetUrlService interviewGetUrlService;
-    
+    private final PeerFeedbackRepository peerFeedbackRepository;
 
     // 면접 목록 조회 
     public CursorPageResponse<MyInterviewListItemResponse> getMyInterviews(Long cursor, int limit) {
@@ -175,7 +179,30 @@ public class MyInterviewService {
                     .build();
         }).toList();
     }
+    // 면접 조회 - 피드백 확인 
+    @Transactional
+    public MyinterviewFeedbackResponse getQuestionFeedback(Long questionId) {
+        Long userId = getUserService.getUserId();
 
+        InterviewQuestion q = interviewQuestionRepository
+                .findByIdAndUserId(questionId, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND));
+
+        // recording이 없으면 null 반환  
+        List<String> peerItems = Optional.ofNullable(q.getRecording())
+                .map(Recording::getId)
+                .map(peerFeedbackRepository::findByRecording_Id)
+                .orElseGet(Collections::emptyList)
+                .stream()
+                .map(pf -> pf.getBody())
+                .toList();
+
+        return new MyinterviewFeedbackResponse(
+                q.getAiFeedback(),
+                q.getSelfFeedback(),
+                peerItems
+        );
+    }
     
     // 면접 제목 수정 
     @Transactional
