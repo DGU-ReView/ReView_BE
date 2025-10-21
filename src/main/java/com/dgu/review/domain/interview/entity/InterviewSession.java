@@ -36,6 +36,9 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 15, nullable = false)
     private String jobRole;
 
+    @Column(name = "timeout_question_numberdk")
+    private Integer timeoutQuestionNumber;
+
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
 

@@ -18,7 +18,7 @@ if len(sys.argv) < 2:  # 오디오 파일 경로가 없을 경우
 audio_presigned_url = sys.argv[1] # 명령줄에서 입력받은 오디오 파일 경로를 변수 audio_path에 저장.
 
 # CPU
-model = WhisperModel("large-v3", device="cpu", compute_type="int8") # 모델 종류, CPU 지정
+model = WhisperModel("small", device="cpu", compute_type="int8") # 모델 종류, CPU 지정
 
 segments, info = model.transcribe(audio_presigned_url, language="ko")
 # model.transcribe: 실제 음성을 텍스트로 변환하는 함수.

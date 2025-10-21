@@ -1,10 +1,12 @@
 package com.dgu.review.domain.interview.service;
 
 import com.dgu.review.domain.interview.dto.InterviewCreateRequest;
+import com.dgu.review.domain.interview.dto.response.ExtractedResume;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 
@@ -32,9 +34,9 @@ public class InterviewPreparationService {
     private final InterviewSessionRepository interviewSessionRepository;	
     private final UserRepository userRepository;
     private static final String PRESIGN_RESUME_KEY_PREFIX = "presign:resume:";
-	
+    private final GetUserService getUserService;
     @Transactional
-    public String extractText(InterviewCreateRequest req) {
+    public ExtractedResume extract(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
     	String redisKey= PRESIGN_RESUME_KEY_PREFIX+resumeId;
     	String resumeObjectKey=redisTemplate.opsForValue().get(redisKey);
@@ -42,9 +44,7 @@ public class InterviewPreparationService {
     	if (resumeObjectKey == null || resumeObjectKey.isBlank()) {
 		    throw new ApiException(ErrorCode.STORAGE_RESUME_NOT_FOUND); 
 		}
-    	
-    	saveInterviewSession(req,resumeObjectKey);
-    	
+
         // S3 열기 
         try (var in = objectReadService.openResume(resumeObjectKey)) {
         	//자소서 변환 
@@ -56,7 +56,7 @@ public class InterviewPreparationService {
             
             //자소서 필터링 
             String resumeText = resumeFilter(resumeId, extraction);
-            return resumeText;
+            return new ExtractedResume(resumeObjectKey, resumeText);
             
         } catch (ApiException e) {
             // openResume에서 이미 발생한 에러 
@@ -69,23 +69,7 @@ public class InterviewPreparationService {
             throw new ApiException(ErrorCode.RESUME_TEXT_EXTRACTION_FAILED);
         }
     }
-    
-    // db에 인터뷰 섹션 저장 
-    private void saveInterviewSession(InterviewCreateRequest req,String resumeObjectKey) {
-    	//목 userId
-    	Long userId = 123L; 
-    	User user = userRepository.findById(userId)
-    				    .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
-    	InterviewSession session = InterviewSession.builder() 
-    			        .resumeObjectKey(resumeObjectKey)
-    			        .mode(req.mode())
-    			        .jobRole(req.jobRole())
-    			        .user(user)
-    			        .build();
 
-    	interviewSessionRepository.save(session);
-    }
-    
     // 자소서 필터링 
     private String resumeFilter(String resumeId, String text) {
     	

@@ -28,7 +28,7 @@ public class Recording extends BaseEntity {
     @Column(length = 1024)
     private String objectKey;
 
-    @Column(columnDefinition = "text", nullable = false)
+    @Column(columnDefinition = "text")
     private String sttText;
 
     @Column(name = "failed_at")
@@ -37,9 +37,6 @@ public class Recording extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_question_id", nullable = false)
     private InterviewQuestion interviewQuestion;
-
-    @OneToOne(mappedBy = "recording", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private AiFeedback aiFeedback;
 
     @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
@@ -57,6 +54,10 @@ public class Recording extends BaseEntity {
 
     public void updateFailedAt(LocalDateTime failedAt) {
         this.failedAt = failedAt;
+    }
+
+    public void updateObjectKey(String objectKey) {
+        this.objectKey = objectKey;
     }
 
 }
