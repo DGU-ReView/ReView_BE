@@ -6,6 +6,7 @@ import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.user.entity.User;
 import com.dgu.review.domain.user.repository.UserRepository;
+import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 
@@ -33,7 +34,7 @@ public class InterviewPreparationService {
     private final InterviewSessionRepository interviewSessionRepository;	
     private final UserRepository userRepository;
     private static final String PRESIGN_RESUME_KEY_PREFIX = "presign:resume:";
-	
+    private final GetUserService getUserService;
     @Transactional
     public ExtractedResume extract(InterviewCreateRequest req) {
     	String resumeId=req.resumeId();	
@@ -44,7 +45,7 @@ public class InterviewPreparationService {
 		    throw new ApiException(ErrorCode.STORAGE_RESUME_NOT_FOUND); 
 		}
 
-        // S3 열기
+        // S3 열기 
         try (var in = objectReadService.openResume(resumeObjectKey)) {
         	//자소서 변환 
             BodyContentHandler handler = new BodyContentHandler(-1); // 길이 제한 없음 
@@ -68,8 +69,8 @@ public class InterviewPreparationService {
             throw new ApiException(ErrorCode.RESUME_TEXT_EXTRACTION_FAILED);
         }
     }
-    
-    // 자소서 필터링
+
+    // 자소서 필터링 
     private String resumeFilter(String resumeId, String text) {
     	
  		// 텍스트에 아무것도 없을 경우 
