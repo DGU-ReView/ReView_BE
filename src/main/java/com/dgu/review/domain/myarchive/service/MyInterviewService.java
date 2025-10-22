@@ -24,7 +24,7 @@ import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
-import com.dgu.review.domain.myarchive.dto.MyinterviewFeedbackResponse;
+import com.dgu.review.domain.myarchive.dto.MyinterviewfeedbackResponse;
 import com.dgu.review.domain.myarchive.dto.RootQuestionCard;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.domain.user.service.GetUserService;
@@ -181,7 +181,7 @@ public class MyInterviewService {
     }
     // 면접 조회 - 피드백 확인 
     @Transactional
-    public MyinterviewFeedbackResponse getQuestionFeedback(Long questionId) {
+    public MyinterviewfeedbackResponse getQuestionFeedback(Long questionId) {
         Long userId = getUserService.getUserId();
 
         InterviewQuestion q = interviewQuestionRepository
@@ -197,7 +197,7 @@ public class MyInterviewService {
                 .map(pf -> pf.getBody())
                 .toList();
 
-        return new MyinterviewFeedbackResponse(
+        return new MyinterviewfeedbackResponse(
                 q.getAiFeedback(),
                 q.getSelfFeedback(),
                 peerItems

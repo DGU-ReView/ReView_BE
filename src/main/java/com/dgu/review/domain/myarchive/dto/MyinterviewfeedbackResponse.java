@@ -4,7 +4,7 @@ import java.util.List;
 
 import lombok.Builder;
 
-public record MyinterviewFeedbackResponse(
+public record MyinterviewfeedbackResponse(
         String aiFeedback,
         String selfFeedback,
         List<String> peerFeedbacks 
