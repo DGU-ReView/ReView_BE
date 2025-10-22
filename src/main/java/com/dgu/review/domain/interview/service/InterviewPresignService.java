@@ -116,7 +116,7 @@ public class InterviewPresignService {
      headers.put("Content-Type", req.contentType());
      
      //key 값 redis에 저장 
-     String redisKey="presign:recording::feedbackquestion"+ feedbackQuestionId;
+     String redisKey="presign:recording::feedbackquestion::"+ feedbackQuestionId;
      redisTemplate.opsForValue().set(redisKey, key, Duration.ofMinutes(10));
 
      return new RecordingUploadUrlResponse(
@@ -217,7 +217,7 @@ private String mapResumeContentType(String ext) {
     }
     
     public String getFeedbackRecordingObjectKey(Long questionId) {
-        String redisKey = "presign:recording::feedbackquestion:" + questionId;
+        String redisKey = "presign:recording::feedbackquestion::" + questionId;
         String key = redisTemplate.opsForValue().get(redisKey);
         if (key == null) {
             throw new ApiException(ErrorCode.REDIS_KEY_NOT_FOUND);
