@@ -1,6 +1,7 @@
 package com.dgu.review.domain.peerfeedback.entity;
 
 import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.interview.entity.FeedbackQuestion;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.user.entity.User;
@@ -29,7 +30,6 @@ public class PeerFeedback extends BaseEntity {
     foreignKey = @ForeignKey(name = "fk_pf_recording"))
     private Recording recording;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false,
     foreignKey = @ForeignKey(name = "fk_pf_user"))
@@ -39,10 +39,10 @@ public class PeerFeedback extends BaseEntity {
     private String followUpQuestion;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "interview_question_id", foreignKey = @ForeignKey(name="fk_pf_question"))
-    private InterviewQuestion generatedQuestion;
+    @JoinColumn(name = "feedback_question_id", foreignKey = @ForeignKey(name="fk_pf_question"))
+    private FeedbackQuestion generatedQuestion;
 
-    public void attachGeneratedQuestion(InterviewQuestion q) {
+    public void attachGeneratedQuestion(FeedbackQuestion q) {
         this.generatedQuestion = q;
     }
 }

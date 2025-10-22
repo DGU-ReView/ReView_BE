@@ -1,36 +1,26 @@
 package com.dgu.review.domain.interview.entity;
 
-import com.dgu.review.domain.common.entity.BaseEntity;
+import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
-@Table(name = "interview_question")
+@Table(name = "feedback_question")
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class InterviewQuestion extends BaseEntity {
+public class FeedbackQuestion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "TINYINT")
-    private Integer questionNumber;
-
     @Column(nullable = false, columnDefinition = "text")
     private String question;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private boolean followUpDone = false;
 
     @Column(columnDefinition = "text", name = "ai_feedback")
     private String aiFeedback;
@@ -42,33 +32,21 @@ public class InterviewQuestion extends BaseEntity {
     @JoinColumn(name = "interview_session_id", nullable = false)
     private InterviewSession interviewSession;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_question_id")
     private InterviewQuestion parentQuestion;
 
-    @OneToOne(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.LAZY)
-    private InterviewQuestion followUpQuestion;
-
-    @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "feedbackQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "parentQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FeedbackQuestion> feedbackQuestions = new ArrayList<>();
+    @OneToOne(mappedBy = "generatedQuestion", fetch = FetchType.LAZY)
+    private PeerFeedback sourcePeerFeedback;
 
     public void attachRecording(Recording recording) {
         this.recording = recording;
         if (recording != null) {
-            recording.attachToQuestion(this);
+            recording.attachToFeedbackQuestion(this);
         }
-    }
-
-    public void attachFollowUp(InterviewQuestion followUpQuestion) {
-        this.followUpQuestion = followUpQuestion;
-    }
-
-    public void attachFeedbackQuestion(FeedbackQuestion feedbackQuestion) {
-        this.feedbackQuestions.add(feedbackQuestion);
     }
 
     public void attachAiFeedback(String aiFeedback) {
