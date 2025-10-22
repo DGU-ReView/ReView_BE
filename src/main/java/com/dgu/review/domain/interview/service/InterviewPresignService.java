@@ -85,7 +85,7 @@ public class InterviewPresignService {
  public RecordingUploadUrlResponse createfeedbackQuestionRecordingPutUrl(RecordingUploadUrlRequest req, Long userId) {
      Long feedbackQuestionId=req.questionId();
      
-	 // feerbackquestion_id가 실제 db에 있는지 검증 
+	 // feedbackquestion_id가 실제 db에 있는지 검증 
 	 if(!feedbackQuestionRepository.existsById(feedbackQuestionId)) {
 		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
 	 };
@@ -116,7 +116,7 @@ public class InterviewPresignService {
      headers.put("Content-Type", req.contentType());
      
      //key 값 redis에 저장 
-     String redisKey="presign:recording:"+ feedbackQuestionId;
+     String redisKey="presign:recording::feedbackquestion"+ feedbackQuestionId;
      redisTemplate.opsForValue().set(redisKey, key, Duration.ofMinutes(10));
 
      return new RecordingUploadUrlResponse(
