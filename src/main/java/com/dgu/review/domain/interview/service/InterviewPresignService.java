@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import com.dgu.review.domain.interview.dto.RecordingUploadUrlRequest;
 import com.dgu.review.domain.interview.dto.RecordingUploadUrlResponse;
 import com.dgu.review.domain.interview.dto.ResumeUploadUrlResponse;
+import com.dgu.review.domain.interview.repository.FeedbackQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -32,6 +33,7 @@ public class InterviewPresignService {
  private String bucket;
  private final InterviewQuestionRepository interviewQuestionRepository;
  private final StringRedisTemplate redisTemplate;
+ private final FeedbackQuestionRepository feedbackQuestionRepository;
 
  public RecordingUploadUrlResponse createRecordingPutUrl(RecordingUploadUrlRequest req, Long userId) {
      Long questionId=req.questionId();
@@ -80,7 +82,50 @@ public class InterviewPresignService {
              headers
      );
  }
+ public RecordingUploadUrlResponse createfeedbackQuestionRecordingPutUrl(RecordingUploadUrlRequest req, Long userId) {
+     Long feedbackQuestionId=req.questionId();
+     
+	 // feerbackquestion_id가 실제 db에 있는지 검증 
+	 if(!feedbackQuestionRepository.existsById(feedbackQuestionId)) {
+		 throw new ApiException(ErrorCode.QUESTION_NOT_FOUND);
+	 };
+	 
+	 // url 유효시간 10분 
+	 long expiryMinutes=10;
+	 
+	 // contentType을 확장자로 
+     String ext = mapExt(req.contentType());
+     String key = "recording/feedback/%d/%d.%s".formatted(userId, feedbackQuestionId, ext);
 
+     PutObjectRequest put = PutObjectRequest.builder()
+             .bucket(bucket)
+             .key(key)
+             .contentType(req.contentType())
+             .build();
+
+     PutObjectPresignRequest presign = PutObjectPresignRequest.builder()
+             .signatureDuration(Duration.ofMinutes(expiryMinutes))
+             .putObjectRequest(put)
+             .build();
+
+     PresignedPutObjectRequest signed = presigner.presignPutObject(presign);
+     URL url = signed.url();
+
+     // url로 업로드 시 반드시 동일하게 보내야 검증 통과하는 헤더 (특히 Content-Type)
+     Map<String, String> headers = new HashMap<>();
+     headers.put("Content-Type", req.contentType());
+     
+     //key 값 redis에 저장 
+     String redisKey="presign:recording:"+ feedbackQuestionId;
+     redisTemplate.opsForValue().set(redisKey, key, Duration.ofMinutes(10));
+
+     return new RecordingUploadUrlResponse(
+             url.toString(),
+             key,
+             headers
+     );
+ }
+ 
  public ResumeUploadUrlResponse createResumePutUrl(Long userId, String fileName) {
 	 // 랜덤으로 resumeId 생성 
 	 String resumeId = UUID.randomUUID().toString();  
@@ -171,4 +216,3 @@ private String mapResumeContentType(String ext) {
         return key;
     }
 }
-
