@@ -215,4 +215,13 @@ private String mapResumeContentType(String ext) {
         }
         return key;
     }
+    
+    public String getFeedbackRecordingObjectKey(Long questionId) {
+        String redisKey = "presign:recording::feedbackquestion:" + questionId;
+        String key = redisTemplate.opsForValue().get(redisKey);
+        if (key == null) {
+            throw new ApiException(ErrorCode.REDIS_KEY_NOT_FOUND);
+        }
+        return key;
+    }
 }
