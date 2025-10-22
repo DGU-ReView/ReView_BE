@@ -193,13 +193,13 @@ public class RecordingCommandService {
                 throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
             }
 
-            r.updateObjectKey(interviewPresignService.getRecordingObjectKey(questionId));
+            r.updateObjectKey(interviewPresignService.getFeedbackRecordingObjectKey(questionId));
             r.attachSttText("");
             return r;
         }
 
         var rec = Recording.builder()
-                .objectKey(interviewPresignService.getRecordingObjectKey(questionId))
+                .objectKey(interviewPresignService.getFeedbackRecordingObjectKey(questionId))
                 .sttText("")
                 .feedbackQuestion(question)
                 .build();
