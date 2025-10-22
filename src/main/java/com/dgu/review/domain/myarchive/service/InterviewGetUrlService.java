@@ -20,29 +20,6 @@ public class InterviewGetUrlService {
     private final S3Presigner presigner;
     @Value("${aws.s3.bucket}")
     private String bucket;
-
-    // 자소서 GET presigned URL 
-    public String createResumeGetUrl(String key) {
-
-        // 10분 유효
-        long expiryMinutes = 10;
-
-        GetObjectRequest get = GetObjectRequest.builder()
-                .bucket(bucket)
-                .key(key)
-                .build();
-
-        GetObjectPresignRequest presign = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(expiryMinutes))
-                .getObjectRequest(get)
-                .build();
-
-        PresignedGetObjectRequest signed = presigner.presignGetObject(presign);
-        URL url = signed.url();
-
-        return url.toString();
-    }
-
  // 녹음 GET presigned URL
     public String createRecordingGetUrl(String key) {
 
