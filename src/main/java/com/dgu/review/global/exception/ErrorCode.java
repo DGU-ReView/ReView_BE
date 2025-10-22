@@ -102,6 +102,12 @@ public enum ErrorCode {
 
 	LLM_RESPONSE_EMPTY("LLM_RESPONSE_EMPRY",
 			HttpStatus.INTERNAL_SERVER_ERROR, "LLM 응답이 비어있습니다."),
+
+	INVALID_FEEDBACK_RECORDING("INVALID_FEEDBACK_RECORDING",
+			HttpStatus.BAD_REQUEST, "피드백 질문에 속한 녹음 파일이 아닙니다."),
+
+	FEEDBACK_QUESTION_NOT_FOUND("FEEDBACK_QUESTION_NOT_FOUND",
+			HttpStatus.NOT_FOUND, "피드백 질문이 존재하지 않습니다."),
 	;
 
 	private final String code;

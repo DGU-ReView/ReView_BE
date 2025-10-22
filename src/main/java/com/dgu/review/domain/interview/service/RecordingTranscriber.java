@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.entity.FeedbackQuestion;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -139,25 +140,29 @@ public class RecordingTranscriber {
             recording.attachSttText(sttText);
             statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
 
-            InterviewQuestion randomQuestion = recording.getInterviewQuestion();
+            FeedbackQuestion feedbackQuestion = recording.getFeedbackQuestion();
+
+            if (feedbackQuestion == null) {
+                log.error("[SttWorkerForRandom] Recording {}이 FeedbackQuestion에 연결되지 않았습니다.", recordingId);
+                throw new ApiException(ErrorCode.INVALID_FEEDBACK_RECORDING);
+            }
 
             try {
                 recordingRepo.flush();
 
-
-                log.info("[feedback] will enqueue for randomQuestionId={} (from qId={})",
-                        randomQuestion.getId(), recording.getInterviewQuestion().getId());
+                log.info("[feedback] will enqueue for feedbackQuestionId={} (from recordingId={})",
+                        feedbackQuestion.getId(), recording.getId());
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override public void afterCommit() {
-                        log.info("[feedback] afterCommit enqueue randomQuestionId={}", randomQuestion.getId());
-                        feedbackJob.generateAiThenSelfAsync(randomQuestion.getId());
+                        log.info("[feedback] afterCommit enqueue feedbackQuestionId={}", feedbackQuestion.getId());
+                        feedbackJob.generateAiThenSelfAsyncForFeedbackQuestion(feedbackQuestion.getId());
                         //feedbackJob.generateAiFeedbackAsync(rootId);
                         //feedbackJob.generateSelfFeedbackAsync(rootId);
                     }
                 });
 
             } catch(Exception e) {
-                log.error("[feedback] async job failed, rootId={}", randomQuestion.getId(), e);
+                log.error("[feedback] async job failed, feedbackQuestionId={}", feedbackQuestion.getId(), e);
             }
 
             statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
