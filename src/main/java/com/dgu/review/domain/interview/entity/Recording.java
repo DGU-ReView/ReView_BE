@@ -35,16 +35,30 @@ public class Recording extends BaseEntity {
     private LocalDateTime failedAt;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "interview_question_id", nullable = false)
+    @JoinColumn(name = "interview_question_id")
     private InterviewQuestion interviewQuestion;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "feedback_question_id")
+    private FeedbackQuestion feedbackQuestion;
 
     @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
 
     public void attachToQuestion(InterviewQuestion question) {
         this.interviewQuestion = question;
+        this.feedbackQuestion = null;
+
         if (question != null && question.getRecording() != this) {
             question.attachRecording(this);
+        }
+    }
+
+    public void attachToFeedbackQuestion(FeedbackQuestion feedbackQuestion) {
+        this.feedbackQuestion = feedbackQuestion;
+        this.interviewQuestion = null;
+        if (feedbackQuestion != null && feedbackQuestion.getRecording() != this) {
+            feedbackQuestion.attachRecording(this);
         }
     }
 
