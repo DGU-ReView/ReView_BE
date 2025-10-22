@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.entity;
 
+import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeedbackQuestion {
+public class FeedbackQuestion extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

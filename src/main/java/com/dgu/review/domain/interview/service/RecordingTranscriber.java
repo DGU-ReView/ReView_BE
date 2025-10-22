@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.entity.FeedbackQuestion;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
@@ -38,6 +39,7 @@ public class RecordingTranscriber {
     private final InterviewQuestionRepository interviewQuestionRepository;
     private final InterviewObjectReadService interviewObjectReadService;
     private final FeedbackJob feedbackJob;
+    private final SttExecutionService sttExecutionService;
 
 //    @Value("${stt.worker.base-url}")
 //    private String workerBaseUrl;
@@ -55,99 +57,120 @@ public class RecordingTranscriber {
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
 
         try {
-
-            long started = System.currentTimeMillis();
             log.info("[sttWorker:start] recordingId={}, thread={}, audioKey={}",
                     recordingId, Thread.currentThread().getName(), recording.getObjectKey());
 
             statusService.setStatus(recordingId, RecordingStatus.TRANSCRIBING, null);
-            log.info("[status:update] recordingId={} -> TRANSCRIBING (readback={})",
-                    recordingId, statusService.getStatus(recordingId));
 
             String audioPresignedUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
 
-            String projectRoot = System.getProperty("user.dir");
-            String scriptPath = projectRoot + File.separator + "stt_worker" + File.separator + "transcribe.py";
+            String sttText = sttExecutionService.executeTranscribe(recordingId, audioPresignedUrl);
 
-            log.info("[sttWorker:cmd] recordingId={}, projectRoot={}, scriptPath={}",
-                    recordingId, projectRoot, scriptPath);
+            recording.attachSttText(sttText);
+            statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
 
-            ProcessBuilder pb = new ProcessBuilder("python", scriptPath, audioPresignedUrl);
-            pb.directory(new File(projectRoot));
-            pb.redirectErrorStream(true);
+            String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
+            String normalized = normalize(followUpQuestionText);
+            boolean createdFollowUp = Optional.ofNullable(followUpQuestionText)
+                    .filter(text -> !normalize(text).equals("추가 질문이 필요하지 않습니다"))
+                    .map(text -> interviewQuestionRepository.save(
+                            InterviewQuestion.builder()
+                                    .question(text)
+                                    .interviewSession(recording.getInterviewQuestion().getInterviewSession())
+                                    .parentQuestion(recording.getInterviewQuestion())
+                                    .build()
+                    ))
+                    .map(saved -> {
+                        recording.getInterviewQuestion().attachFollowUp(saved);
+                        return true;
+                    })
+                    .orElse(false);
 
+            log.info("[followup] questionId={} raw='{}' normalized='{}' created={}",
+                    recording.getInterviewQuestion().getId(), safePreview(followUpQuestionText, 100), normalized, createdFollowUp);
 
-            Process process = pb.start();
-            log.info("[sttWorker:proc] recordingId={} processStarted (thread={})",
-                    recordingId, Thread.currentThread().getName());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
-            }
-            int exitCode = process.waitFor();
-            log.info("[sttWorker:exit] recordingId={}, exitCode={}, elapsedMs={}", recordingId, exitCode, System.currentTimeMillis()-started);
+            if (!createdFollowUp) {
+                InterviewQuestion rootQ = null;
+                try {
+                    recordingRepo.flush();
 
-            if (exitCode == 0) {
-                recording.attachSttText(output.toString());
-                statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
+                    rootQ = getRoot(recording.getInterviewQuestion());
+                    Long rootId = rootQ.getId();
 
-                String followUpQuestionText = sttFeedbackService.generateAiFollowUp(recording.getInterviewQuestion().getId());
-                String normalized = normalize(followUpQuestionText);
-                boolean createdFollowUp = Optional.ofNullable(followUpQuestionText)
-                        .filter(text -> !normalize(text).equals("추가 질문이 필요하지 않습니다"))
-                        .map(text -> interviewQuestionRepository.save(
-                                InterviewQuestion.builder()
-                                        .question(text)
-                                        .interviewSession(recording.getInterviewQuestion().getInterviewSession())
-                                        .parentQuestion(recording.getInterviewQuestion())
-                                        .build()
-                        ))
-                        .map(saved -> {
-                            recording.getInterviewQuestion().attachFollowUp(saved);
-                            return true;
-                        })
-                        .orElse(false);
+                    log.info("[feedback] will enqueue for rootId={} (from qId={})",
+                            rootQ.getId(), recording.getInterviewQuestion().getId());
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override public void afterCommit() {
+                            log.info("[feedback] afterCommit enqueue rootId={}", rootId);
+                            feedbackJob.generateAiThenSelfAsync(rootId);
+                            //feedbackJob.generateAiFeedbackAsync(rootId);
+                            //feedbackJob.generateSelfFeedbackAsync(rootId);
+                        }
+                    });
 
-                log.info("[followup] questionId={} raw='{}' normalized='{}' created={}",
-                        recording.getInterviewQuestion().getId(), safePreview(followUpQuestionText, 100), normalized, createdFollowUp);
-
-                if (!createdFollowUp) {
-                    InterviewQuestion rootQ = null;
-                    try {
-                        recordingRepo.flush();
-
-                        rootQ = getRoot(recording.getInterviewQuestion());
-                        Long rootId = rootQ.getId();
-
-                        log.info("[feedback] will enqueue for rootId={} (from qId={}) path={}",
-                                rootQ.getId(), recording.getInterviewQuestion().getId(), dumpPathIds(recording.getInterviewQuestion()));
-                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                            @Override public void afterCommit() {
-                                log.info("[feedback] afterCommit enqueue rootId={}", rootId);
-                                feedbackJob.generateAiThenSelfAsync(rootId);
-                                //feedbackJob.generateAiFeedbackAsync(rootId);
-                                //feedbackJob.generateSelfFeedbackAsync(rootId);
-                            }
-                        });
-
-                    } catch(Exception e) {
-                        log.error("[feedback] async job failed, rootId={}", rootQ.getId(), e);
-                    }
+                } catch(Exception e) {
+                    log.error("[feedback] async job failed, rootId={}", rootQ.getId(), e);
                 }
 
                 statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
 
-            } else {
-                statusService.setStatus(recordingId, RecordingStatus.FAILED, Duration.ofMinutes(30));
-                recording.updateFailedAt(LocalDateTime.now());
             }
         } catch (Exception e) {
             statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
             recording.updateFailedAt(LocalDateTime.now());
-            log.error("STT 워커 실행 실패 recordingId={}", recordingId, e);
-            throw new RuntimeException("STT 워커 실행 실패", e);
+        }
+    }
+
+    @Transactional
+    @Async
+    public void sttAsyncWorkerForRandom(Long recordingId) {
+        Recording recording = recordingRepo.findById(recordingId)
+                .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
+        try {
+            log.info("[SttWorkerForRandom:start] recordingId={}, thread={}, audioKey={}",
+                    recordingId, Thread.currentThread().getName(), recording.getObjectKey());
+
+            statusService.setStatus(recordingId, RecordingStatus.TRANSCRIBING, null);
+
+            String audioPresignedUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
+
+            String sttText = sttExecutionService.executeTranscribe(recordingId, audioPresignedUrl);
+
+            recording.attachSttText(sttText);
+            statusService.setStatus(recordingId, RecordingStatus.COMPLETED, null);
+
+            FeedbackQuestion feedbackQuestion = recording.getFeedbackQuestion();
+
+            if (feedbackQuestion == null) {
+                log.error("[SttWorkerForRandom] Recording {}이 FeedbackQuestion에 연결되지 않았습니다.", recordingId);
+                throw new ApiException(ErrorCode.INVALID_FEEDBACK_RECORDING);
+            }
+
+            try {
+                recordingRepo.flush();
+
+                log.info("[feedback] will enqueue for feedbackQuestionId={} (from recordingId={})",
+                        feedbackQuestion.getId(), recording.getId());
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override public void afterCommit() {
+                        log.info("[feedback] afterCommit enqueue feedbackQuestionId={}", feedbackQuestion.getId());
+                        feedbackJob.generateAiThenSelfAsyncForFeedbackQuestion(feedbackQuestion.getId());
+                        //feedbackJob.generateAiFeedbackAsync(rootId);
+                        //feedbackJob.generateSelfFeedbackAsync(rootId);
+                    }
+                });
+
+            } catch(Exception e) {
+                log.error("[feedback] async job failed, feedbackQuestionId={}", feedbackQuestion.getId(), e);
+            }
+
+            statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
+
+        } catch (Exception e) {
+            log.error("[stt] async job failed, recordingId={}", recording.getId(), e);
+            statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
+            recording.updateFailedAt(LocalDateTime.now());
         }
     }
 
@@ -180,18 +203,4 @@ public class RecordingTranscriber {
         return (s.length() <= max) ? s : s.substring(0, max) + "...";
     }
 
-    private String dumpPathIds(InterviewQuestion q) {
-        try {
-            List<Long> ids = new ArrayList<>();
-            InterviewQuestion cur = q;
-            int guard = 0;
-            while (cur != null && guard++ < 50) {
-                ids.add(cur.getId());
-                cur = cur.getParentQuestion();
-            }
-            return ids.toString();
-        } catch (Exception e) {
-            return "[error building path]";
-        }
-    }
 }
