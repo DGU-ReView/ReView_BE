@@ -37,6 +37,15 @@ public class InterviewPresignController {
      RecordingUploadUrlResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
      return ResponseEntity.ok(res);
  }
+ @PostMapping("/recording/feedback-question")
+ public ResponseEntity<RecordingUploadUrlResponse> presignRecordforRandomQuestionPutUrl(
+         @Valid @RequestBody RecordingUploadUrlRequest req
+ ) {
+     Long userId = getUserService.getUserId(); 
+
+     RecordingUploadUrlResponse res = interviewUploadService.createfeedbackQuestionRecordingPutUrl(req, userId);
+     return ResponseEntity.ok(res);
+ }
  
  @PostMapping("/resume")
  public ResponseEntity<ResumeUploadUrlResponse> presignResumePutUrl(@RequestParam(name = "fileName", required = true) String fileName) {
