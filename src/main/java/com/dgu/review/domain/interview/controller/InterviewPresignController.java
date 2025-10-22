@@ -1,3 +1,4 @@
+
 package com.dgu.review.domain.interview.controller;
 
 import jakarta.validation.Valid;
@@ -35,15 +36,6 @@ public class InterviewPresignController {
      Long userId = getUserService.getUserId(); 
 
      RecordingUploadUrlResponse res = interviewUploadService.createRecordingPutUrl(req, userId);
-     return ResponseEntity.ok(res);
- }
- @PostMapping("/recording/feedback-question")
- public ResponseEntity<RecordingUploadUrlResponse> presignRecordforRandomQuestionPutUrl(
-         @Valid @RequestBody RecordingUploadUrlRequest req
- ) {
-     Long userId = getUserService.getUserId(); 
-
-     RecordingUploadUrlResponse res = interviewUploadService.createfeedbackQuestionRecordingPutUrl(req, userId);
      return ResponseEntity.ok(res);
  }
  
