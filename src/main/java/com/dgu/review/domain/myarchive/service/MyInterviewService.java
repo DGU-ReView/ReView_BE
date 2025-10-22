@@ -113,14 +113,19 @@ public class MyInterviewService {
                     .map(q -> {
                         Recording rec = q.getRecording();
                         String answerText = rec != null ? rec.getSttText() : null;
-                        String key = rec.getObjectKey();
-                        String Url=interviewGetUrlService.createRecordingGetUrl(key);
+                        String recordUrl = null;
+                        if (rec != null) {
+                            String key = rec.getObjectKey();
+                            if (key != null && !key.isBlank()) {
+                                recordUrl = interviewGetUrlService.createRecordingGetUrl(key);
+                            }
+                        }
                         return AnswerCheckItem.builder()  
                                 .order(threadIdx[0]++)
                                 .questionId(q.getId())
                                 .question(q.getQuestion())
                                 .answerText(answerText)
-                                .recordUrl(Url)
+                                .recordUrl(recordUrl)
                                 .build();
                     })
                     .toList();
