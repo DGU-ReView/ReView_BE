@@ -36,8 +36,9 @@ public class InterviewSession extends BaseEntity {
     @Column(length = 15, nullable = false)
     private String jobRole;
 
-    @Column(name = "timeout_question_numberdk")
-    private Integer timeoutQuestionNumber;
+    @Builder.Default
+    @Column(name = "timeout_question_number")
+    private Integer timeoutQuestionNumber = 0;
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewQuestion> questions = new ArrayList<>();
@@ -48,5 +49,9 @@ public class InterviewSession extends BaseEntity {
     
     public void changeTitle(String newTitle) {
         this.title = newTitle;
+    }
+
+    public void addOneTimeoutQuestion() {
+        this.timeoutQuestionNumber++;
     }
 }
