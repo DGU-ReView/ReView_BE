@@ -23,17 +23,16 @@ public interface PeerFeedbackRepository extends JpaRepository<PeerFeedback, Long
     List<String> findRecentContentsByWriter(Long writerId, Pageable pageable);
     List<PeerFeedback> findByRecording_Id(Long recordingId);
 
-    @Query("SELECT pf.id FROM PeerFeedback pf " +
-            "JOIN pf.recording r " +
-            "JOIN r.interviewQuestion iq " +
-            "JOIN iq.interviewSession s " +
-            "WHERE s.user.id = :userId " +
-            "AND pf.followUpQuestion IS NOT NULL " +
-            "AND pf.followUpQuestion != '' " +
-            "AND NOT EXISTS (" +
-            "    SELECT 1 FROM InterviewQuestion iq_sub " +
-            "    WHERE iq_sub.sourcePeerFeedback.id = pf.id" +
-            ")")
+    @Query("""
+        SELECT pf.id FROM PeerFeedback pf
+        JOIN pf.recording r
+        JOIN r.interviewQuestion iq
+        JOIN iq.interviewSession s
+        WHERE s.user.id = :userId
+        AND pf.followUpQuestion IS NOT NULL
+        AND pf.followUpQuestion != ''
+        AND pf.generatedQuestion IS NULL
+    """)
     List<Long> findEligiblePeerFeedbackIdsForUser(@Param("userId") Long userId);
 
 }
