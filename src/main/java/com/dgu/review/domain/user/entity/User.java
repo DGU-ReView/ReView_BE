@@ -4,7 +4,6 @@ import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.community.entity.CommunityPage;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -14,6 +13,7 @@ import java.util.List;
 /*
   User 테이블 매핑
  */
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -47,7 +47,7 @@ public class User extends BaseEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
-
+    
     public void updateProfile(String email, String name) {
         this.email = email;
         this.username = name;

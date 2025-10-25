@@ -27,6 +27,27 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class,
 			ConstraintViolationException.class })
 	public ResponseEntity<ApiResponse<Void>> handleValidation(Exception ex) {
+
+        // 🧩 상세 로그 추가
+        if (ex instanceof MethodArgumentNotValidException manve) {
+            manve.getBindingResult().getFieldErrors().forEach(err ->
+                log.warn("[VALIDATION_ERROR] field='{}', rejectedValue='{}', message='{}'",
+                        err.getField(), err.getRejectedValue(), err.getDefaultMessage())
+            );
+        } else if (ex instanceof BindException be) {
+            be.getBindingResult().getFieldErrors().forEach(err ->
+                log.warn("[BIND_ERROR] field='{}', rejectedValue='{}', message='{}'",
+                        err.getField(), err.getRejectedValue(), err.getDefaultMessage())
+            );
+        } else if (ex instanceof ConstraintViolationException cve) {
+            cve.getConstraintViolations().forEach(v ->
+                log.warn("[CONSTRAINT_VIOLATION] property='{}', invalidValue='{}', message='{}'",
+                        v.getPropertyPath(), v.getInvalidValue(), v.getMessage())
+            );
+        } else {
+            log.warn("[VALIDATION_ERROR] {}", ex.toString());
+        }
+
 		ApiResponse<Void> body = ApiResponse.error("VALIDATION_ERROR","요청 값이 유효하지 않습니다.");
 		return ResponseEntity.status(422).body(body);
 	}

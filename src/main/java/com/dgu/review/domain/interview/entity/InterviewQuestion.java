@@ -46,11 +46,15 @@ public class InterviewQuestion extends BaseEntity {
     @JoinColumn(name = "parent_question_id")
     private InterviewQuestion parentQuestion;
 
-    @OneToOne(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.EAGER)
+    @OneToOne(mappedBy = "parentQuestion", cascade = CascadeType.ALL, orphanRemoval = false, fetch = FetchType.LAZY)
     private InterviewQuestion followUpQuestion;
 
     @OneToOne(mappedBy = "interviewQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Recording recording;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "parentQuestion", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FeedbackQuestion> feedbackQuestions = new ArrayList<>();
 
     public void attachRecording(Recording recording) {
         this.recording = recording;
@@ -61,6 +65,10 @@ public class InterviewQuestion extends BaseEntity {
 
     public void attachFollowUp(InterviewQuestion followUpQuestion) {
         this.followUpQuestion = followUpQuestion;
+    }
+
+    public void attachFeedbackQuestion(FeedbackQuestion feedbackQuestion) {
+        this.feedbackQuestions.add(feedbackQuestion);
     }
 
     public void attachAiFeedback(String aiFeedback) {

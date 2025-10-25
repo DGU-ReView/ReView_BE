@@ -21,6 +21,7 @@ public interface PeerFeedbackRepository extends JpaRepository<PeerFeedback, Long
         order by pf.createdAt desc
     """)
     List<String> findRecentContentsByWriter(Long writerId, Pageable pageable);
+    List<PeerFeedback> findByRecording_Id(Long recordingId);
 
     @Query("SELECT pf.id FROM PeerFeedback pf " +
             "JOIN pf.recording r " +
