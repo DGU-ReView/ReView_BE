@@ -62,7 +62,7 @@ public class MyInterviewController {
     }
 	
 	// 나의 면접 상세 조회 - 랜덤 질문 답변 조회 
-	@GetMapping("/questions/{questionId}/random-question")
+	@GetMapping("/questions/{questionId}/random-questions")
     public ResponseEntity<ApiResponse<List<MyInterviewRandomQuestionResponse>>> getRandomQuestionAnswers(
             @PathVariable("questionId") Long questionId
     ) {
@@ -82,7 +82,7 @@ public class MyInterviewController {
 
 
 	// 나의 면접 세션 삭제
-	@DeleteMapping("/{sessionId}/delete")
+	@DeleteMapping("/{sessionId}")
     public ResponseEntity<ApiResponse<Void>> deleteMySession(
             @PathVariable("sessionId") Long sessionId
     ) {
