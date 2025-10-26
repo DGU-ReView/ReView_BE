@@ -22,13 +22,14 @@ import lombok.RequiredArgsConstructor;
 public class ProfileController {
 
     private final MyProfileService profileService;
-
+    
+    // 내 프로필 조회 
     @GetMapping
     public ResponseEntity<ApiResponse<MyProfileGetResponse>> getMyTags() {
     	MyProfileGetResponse res = profileService.getProfileTags();
         return ResponseEntity.ok(ApiResponse.ok(res));
     }
-
+    // 내 프로필 저장& 수정 
     @PutMapping
     public ResponseEntity<ApiResponse<MyProfileUpdateResponse>> updateMyTags(
             @RequestBody MyProfileUpdateRequest request
