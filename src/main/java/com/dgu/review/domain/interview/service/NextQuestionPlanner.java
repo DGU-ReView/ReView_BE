@@ -16,6 +16,11 @@ public class NextQuestionPlanner {
         var currentRoot = getRoot(current);
         var savedFollowUp = current.getFollowUpQuestion();
 
+        if (currentRoot.getQuestionNumber() == null) {
+            log.warn("[NextQuestionPlanner] 'currentRoot' (ID: {}) has a null questionNumber. Session ID: {}",
+                    currentRoot.getId(), currentRoot.getInterviewSession().getId());
+        }
+
         // 꼬리질문 존재
         if (savedFollowUp != null) {
             return NextPayload.builder()
@@ -51,8 +56,20 @@ public class NextQuestionPlanner {
     }
 
     private InterviewQuestion findNextRoot(InterviewQuestion root) {
+        if (root.getQuestionNumber() == null) {
+            log.warn("[NextQuestionPlanner.findNextRoot] 'root' parameter (ID: {}) has a null questionNumber. Session ID: {}",
+                    root.getId(), root.getInterviewSession().getId());
+        }
         return root.getInterviewSession().getQuestions().stream()
                 .filter(q -> q.getParentQuestion() == null)
+                .peek(q -> {
+                            if (q.getQuestionNumber() == null) {
+                                log.warn("[NextQuestionPlanner.findNextRoot] Stream filter check: Found root question (ID: {}) with null questionNumber. Session ID: {}",
+                                        q.getId(), root.getInterviewSession().getId());
+                            }
+                        }
+
+                )
                 .filter(q -> q.getQuestionNumber() == root.getQuestionNumber() + 1)
                 .findFirst()
                 .orElse(null);

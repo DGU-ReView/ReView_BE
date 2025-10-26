@@ -76,6 +76,8 @@ public class RecordingCommandService {
 
         }
 
+        question.getInterviewSession().addOneTimeoutQuestion();
+
         statusService.setStatus(rec.getId(), RecordingStatus.TIMEOUT, null);
 
         NextPayload next = nextQuestionPlanner.decideNextPayload(question);
