@@ -55,6 +55,7 @@ public class SecurityConfig {
 			CorsConfiguration config = new CorsConfiguration();
 			config.addAllowedOrigin("https://re-view-me.shop"); 
 			config.addAllowedOrigin("https://api.re-view-me.shop");
+			config.addAllowedOrigin("http://localhost:5173");
 			config.setAllowCredentials(true);
 			config.addAllowedHeader("*");
 			config.addAllowedMethod("*");
@@ -106,7 +107,13 @@ public class SecurityConfig {
 
 			// 성공 후 리다이렉트 
 			log.info("로그인에 성공했습니다. kakaoId : {}", kakaoId);
-            res.sendRedirect("https://re-view-me.shop/"); 
+			// 프론트 배포 성공시 변경 
+//            res.sendRedirect("https://re-view-me.shop/"); 
+			
+			// json 반환 
+            res.setStatus(HttpServletResponse.SC_OK); // 200
+            res.setContentType("text/plain;charset=UTF-8");
+            res.getWriter().write("로그인 성공");
 		};
 	}
 
