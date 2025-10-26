@@ -108,12 +108,11 @@ public class SecurityConfig {
 			// 성공 후 리다이렉트 
 			log.info("로그인에 성공했습니다. kakaoId : {}", kakaoId);
 			// 프론트 배포 성공시 변경 
-//            res.sendRedirect("https://re-view-me.shop/"); 
-			
+            res.sendRedirect("http://localhost:5173/"); 
 			// json 반환 
-            res.setStatus(HttpServletResponse.SC_OK); // 200
-            res.setContentType("text/plain;charset=UTF-8");
-            res.getWriter().write("로그인 성공");
+//            res.setStatus(HttpServletResponse.SC_OK); // 200
+//            res.setContentType("text/plain;charset=UTF-8");
+//            res.getWriter().write("로그인 성공");
 		};
 	}
 
