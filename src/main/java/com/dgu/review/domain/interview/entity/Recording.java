@@ -42,7 +42,7 @@ public class Recording extends BaseEntity {
     @JoinColumn(name = "feedback_question_id")
     private FeedbackQuestion feedbackQuestion;
 
-    @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(mappedBy = "recording", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     private List<PeerFeedback> peerFeedbacks = new ArrayList<>();
 
     public void attachToQuestion(InterviewQuestion question) {
