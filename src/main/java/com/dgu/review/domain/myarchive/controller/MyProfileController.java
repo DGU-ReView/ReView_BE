@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/myarchive/myprofile")
-public class ProfileController {
+public class MyProfileController {
 
     private final MyProfileService profileService;
     
