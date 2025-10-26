@@ -1,6 +1,6 @@
 package com.dgu.review.domain.myarchive.dto;
 
-public record MyFeedbackListItemResponse(
+public record MyPeerFeedbackListItemResponse(
         Long peerFeedbackId,
         String title
 ) {}

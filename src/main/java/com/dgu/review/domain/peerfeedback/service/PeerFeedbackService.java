@@ -4,7 +4,6 @@ import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackRequest;
-import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackResponse;
 import com.dgu.review.domain.peerfeedback.dto.RandomRecordingResponse;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
@@ -87,34 +86,5 @@ public class PeerFeedbackService {
         peerFeedbackRepository.save(feedback);
     }
     private final GetUserService getUserService;
-    /**
-     * 내가 작성한 평가 상세 조회
-     */
-    public PeerFeedbackResponse getFeedbackDetail(Long feedbackId) {
-
-        Long currentUserId = getUserService.getUserId();
-        PeerFeedback feedback = peerFeedbackRepository.findById(feedbackId)
-                .orElseThrow(() -> new ApiException(ErrorCode.PEER_FEEDBACK_NOT_FOUND));
-
-
-        if (!feedback.getUser().getId().equals(currentUserId)) {
-            throw new ApiException(ErrorCode.FORBIDDEN_RESOURCE);
-        }
-
-        Recording recording = feedback.getRecording();
-        InterviewQuestion question = recording.getInterviewQuestion();
-        InterviewSession session = question.getInterviewSession();
-
-        String recordingUrl = interviewObjectReadService.createRecordingGetUrl(recording.getObjectKey());
-
-
-        return new PeerFeedbackResponse(
-                feedback.getId(),
-                question.getQuestion(),
-                feedback.getBody(),
-                feedback.getFollowUpQuestion(),
-                session.getJobRole(),
-                feedback.getCreatedAt()
-        );
-    }
+    
 }
