@@ -55,6 +55,7 @@ public class SecurityConfig {
 			CorsConfiguration config = new CorsConfiguration();
 			config.addAllowedOrigin("https://re-view-me.shop"); 
 			config.addAllowedOrigin("https://api.re-view-me.shop");
+			config.addAllowedOrigin("http://localhost:5173");
 			config.setAllowCredentials(true);
 			config.addAllowedHeader("*");
 			config.addAllowedMethod("*");
