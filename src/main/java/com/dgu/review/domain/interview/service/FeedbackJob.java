@@ -1,7 +1,11 @@
 package com.dgu.review.domain.interview.service;
 
+import com.dgu.review.domain.interview.entity.FeedbackQuestion;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
+import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.repository.FeedbackQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
+import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.domain.peerfeedback.repository.PeerFeedbackRepository;
 import com.dgu.review.domain.user.service.GetUserService;
 import com.dgu.review.global.exception.ApiException;
@@ -15,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +30,8 @@ public class FeedbackJob {
     private final SttFeedbackService sttFeedbackService;
     private final PeerFeedbackRepository peerFeedbackRepository;
     private final GetUserService getUserService;
+    private final FeedbackQuestionRepository feedbackQuestionRepository;
+    private final RecordingRepository recordingRepository;
 
     @Async("llmExecutor")
     @Transactional
@@ -57,7 +64,7 @@ public class FeedbackJob {
 
             if (root.getSelfFeedback() == null || root.getSelfFeedback().isBlank()) {
                 debugChain("SELF", root, chain);
-                Long userId = getUserService.getUserId();
+                Long userId = root.getInterviewSession().getUser().getId();
 
                 List<String> myPeerFeedbacks =
                         peerFeedbackRepository.findRecentContentsByWriter(userId, PageRequest.of(0, 5));
@@ -75,6 +82,82 @@ public class FeedbackJob {
 
         } catch (Exception e) {
             log.error("[feedback] async job failed, rootId={}", rootQuestionId, e);
+        }
+    }
+
+    @Async("llmExecutor")
+    @Transactional
+    public void generateAiThenSelfAsyncForFeedbackQuestion(Long feedbackQuestionId) {
+        try {
+            FeedbackQuestion fq = feedbackQuestionRepository.findById(feedbackQuestionId)
+                    .orElseThrow(() -> new ApiException(ErrorCode.FEEDBACK_QUESTION_NOT_FOUND));
+
+            InterviewQuestion parentIq = fq.getParentQuestion();
+            if (parentIq == null) {
+                log.warn("[feedback_fq] fqId={} has no parentIq. Cannot build chain.", feedbackQuestionId);
+                return;
+            }
+
+            Recording recording = recordingRepository.findByFeedbackQuestion(fq)
+                    .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
+
+            String fqSttText = recording.getSttText();
+            if (fqSttText == null || fqSttText.isBlank()) {
+                log.warn("[feedback_fq] STT text is empty, skip fqId={}", feedbackQuestionId);
+                return;
+            }
+
+            Optional<Recording> parentIqRecordingOpt = recordingRepository.findByInterviewQuestion(parentIq);
+            if (parentIqRecordingOpt.isEmpty()) {
+                log.warn("[feedback_fq] Parent IQ (id={}) has no recording. Skipping parent context.", parentIq.getId());
+            }
+
+            String parentIqSttText = parentIqRecordingOpt.map(Recording::getSttText).orElse("");
+
+            List<QAPair> chain = new ArrayList<>();
+
+            if (!parentIqSttText.isBlank()) {
+                chain.add(new QAPair(parentIq.getQuestion(), parentIqSttText));
+                log.info("[feedback_fq] Added parent context: iqId={}", parentIq.getId());
+            } else {
+                log.warn("[feedback_fq] Parent context (iqId={}) answer is blank, skipping.", parentIq.getId());
+            }
+
+            chain.add(new QAPair(fq.getQuestion(), fqSttText));
+            log.info("[feedback_fq] Added main context: fqId={}. Total chain size={}", fq.getId(), chain.size());
+
+            if (fq.getAiFeedback() == null || fq.getAiFeedback().isBlank()) {
+                String aiFeedback = sttFeedbackService.generateAiFeedbackForRoot(chain, feedbackQuestionId);
+                if (aiFeedback == null || aiFeedback.isBlank()) {
+                    log.warn("[feedback_fq] empty AI feedback from LLM, fqId={}", feedbackQuestionId);
+                    return;
+                }
+                fq.attachAiFeedback(aiFeedback);
+                log.info("[feedback] saved AI, fqId={}", feedbackQuestionId);
+            } else {
+                log.info("[feedback] AI already exists, skip fqId={}", feedbackQuestionId);
+            }
+
+            if (fq.getSelfFeedback() == null || fq.getSelfFeedback().isBlank()) {
+                debugChain("SELF", parentIq, chain);
+                Long userId = fq.getInterviewSession().getUser().getId();
+
+                List<String> myPeerFeedbacks =
+                        peerFeedbackRepository.findRecentContentsByWriter(userId, PageRequest.of(0, 5));
+
+                String selfFeedback = sttFeedbackService.generateSelfFeedbackForRoot(chain, myPeerFeedbacks, feedbackQuestionId);
+                if (selfFeedback == null || selfFeedback.isBlank()) {
+                    log.warn("[feedback_fq] empty SELF feedback from LLM, fqId={}", feedbackQuestionId);
+                    return;
+                }
+                fq.attachSelfFeedback(selfFeedback);
+                log.info("[feedback] saved SELF, fqId={}", feedbackQuestionId);
+            } else {
+                log.info("[feedback] SELF already exists, skip fqId={}", feedbackQuestionId);
+            }
+
+        } catch (Exception e) {
+            log.error("[feedback] async job failed, fqId={}", feedbackQuestionId, e);
         }
     }
 

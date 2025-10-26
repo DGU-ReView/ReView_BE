@@ -7,6 +7,7 @@ import com.dgu.review.domain.interview.dto.response.RecordingResultsResponse;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.Recording;
 import com.dgu.review.domain.interview.entity.RecordingStatus;
+import com.dgu.review.domain.interview.repository.FeedbackQuestionRepository;
 import com.dgu.review.domain.interview.repository.RecordingRepository;
 import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
@@ -29,14 +30,21 @@ public class RecordingCommandService {
     private final RecordingJobQueue recordingJobQueue;
     private final InterviewPresignService interviewPresignService;
     private final NextQuestionPlanner nextQuestionPlanner;
+    private final FeedbackQuestionRepository feedbackQuestionRepository;
 
     @PersistenceContext
     private EntityManager em;
 
     @Transactional
     public RecordingCreateResponse createAndTranscribe(Long questionId) {
-        Recording saved = saveRecording(questionId);
+        Recording saved = saveRecordingForInterview(questionId);
         return enqueueRecordingJob(saved.getId());
+    }
+
+    @Transactional
+    public RecordingCreateResponse createAndTranscribeForRandom(Long questionId) {
+        Recording saved = saveRecordingForFeedback(questionId);
+        return enqueueRecordingJobForRandom(saved.getId());
     }
 
     @Transactional
@@ -67,6 +75,8 @@ public class RecordingCommandService {
             rec = recordingRepo.save(rec);
 
         }
+
+        question.getInterviewSession().addOneTimeoutQuestion();
 
         statusService.setStatus(rec.getId(), RecordingStatus.TIMEOUT, null);
 
@@ -114,8 +124,36 @@ public class RecordingCommandService {
         throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
     }
 
+    @Transactional
+    public RecordingCreateResponse enqueueRecordingJobForRandom(Long recordingId) {
+        var cur = statusService.getStatus(recordingId);
+        if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT || cur == null) {
+            if (cur == RecordingStatus.FAILED || cur == RecordingStatus.TIMEOUT) {
+                statusService.clearStatus(recordingId);
+            }
+            boolean first = statusService.trySetUploadedIfAbsent(recordingId);
 
-    private Recording saveRecording(Long questionId) {
+            if (!first) {
+                throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+            }
+
+            log.info("[enqueue] dispatch async worker recordingId={}", recordingId);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() {
+                    recordingJobQueue.enqueueForRandom(recordingId);
+                }
+            });
+
+            return new RecordingCreateResponse(recordingId, statusService.getStatus(recordingId).name());
+
+        }
+
+        throw new ApiException(ErrorCode.ALREADY_IN_QUEUE_OR_DONE);
+    }
+
+
+    private Recording saveRecordingForInterview(Long questionId) {
         var question = em.find(InterviewQuestion.class, questionId);
         if (question == null) {
             log.warn("인터뷰 질문을 찾을 수 없습니다. interviewQuestionId={}", questionId);
@@ -139,6 +177,33 @@ public class RecordingCommandService {
                 .objectKey(interviewPresignService.getRecordingObjectKey(questionId))
                 .sttText("")
                 .interviewQuestion(question)
+                .build();
+
+        question.attachRecording(rec);
+        return recordingRepo.save(rec);
+    }
+
+    private Recording saveRecordingForFeedback(Long questionId) {
+        var question = feedbackQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new ApiException(ErrorCode.FEEDBACK_QUESTION_NOT_FOUND));
+
+        var existingRecording = recordingRepo.findByFeedbackQuestion(question);
+        if (existingRecording.isPresent()) {
+            Recording r = existingRecording.get();
+
+            if (r.getSttText() != null && !r.getSttText().isBlank()) {
+                throw new ApiException(ErrorCode.RECORDING_ALREADY_PROCESSED);
+            }
+
+            r.updateObjectKey(interviewPresignService.getFeedbackRecordingObjectKey(questionId));
+            r.attachSttText("");
+            return r;
+        }
+
+        var rec = Recording.builder()
+                .objectKey(interviewPresignService.getFeedbackRecordingObjectKey(questionId))
+                .sttText("")
+                .feedbackQuestion(question)
                 .build();
 
         question.attachRecording(rec);

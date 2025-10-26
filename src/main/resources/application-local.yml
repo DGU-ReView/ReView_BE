@@ -49,3 +49,6 @@ aws:
   s3:
     bucket: ${AWS_S3_BUCKET}         # S3 이름/ 실제 배포할때 .env나 AWS Secrets Manager로 주입
   region: ap-northeast-2
+notification:
+  random:
+    probability: 10

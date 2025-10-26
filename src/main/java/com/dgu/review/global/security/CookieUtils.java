@@ -36,7 +36,7 @@ public class CookieUtils {
                 .path("/")
                 .httpOnly(true)
                 .secure(true)          // HTTPS 전송만
-                .sameSite("Lax")       // same-site 명시 (서브도메인 간 OK)
+                .sameSite("None")       
                 .maxAge(Duration.ofSeconds(maxAgeSeconds))
                 .build();
         res.addHeader("Set-Cookie", cookie.toString());

@@ -44,3 +44,6 @@ out/
 src/main/java/com/dgu/review/domain/localtest/
 audio_files/
 **/app.log
+
+**/notification_test.html
+

@@ -60,7 +60,7 @@ public class InterviewService {
 
         InterviewSummary interviewSummary = InterviewSummary.builder()
                 .interviewTitle(session.getTitle())
-                .timeoutQuestionNumber(recordingRepository.countTimeoutsBySessionId(sessionId))
+                .timeoutQuestionNumber(session.getTimeoutQuestionNumber())
                 .questionSummaries(questionSummaries)
                 .build();
 

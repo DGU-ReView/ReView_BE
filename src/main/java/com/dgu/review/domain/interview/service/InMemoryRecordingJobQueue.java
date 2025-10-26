@@ -16,4 +16,9 @@ public class InMemoryRecordingJobQueue implements RecordingJobQueue {
     public void enqueue(Long recordingId) {
         recordingTranscriber.sttAsyncWorker(recordingId);
     }
+
+    @Override
+    public void enqueueForRandom(Long recordingId){
+        recordingTranscriber.sttAsyncWorkerForRandom(recordingId);
+    }
 }

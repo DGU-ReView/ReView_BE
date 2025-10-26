@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @AllArgsConstructor
 @Slf4j
@@ -30,6 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         //토큰 추출
         String token = extractToken(request);
+        log.debug("[JWT] Authz={}, access_tokenHdr={}, access_tokenCookie={}",
+        	    request.getHeader("Authorization"),
+        	    request.getHeader("access_token"),
+        	    (request.getCookies()!=null) && Arrays.stream(request.getCookies())
+        	        .anyMatch(c -> "access_token".equals(c.getName())));
+
 
         if (token != null) {
             String kakaoId = jwtTokenUtil.extractKakaoId(token);
@@ -67,25 +74,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // JWT 토큰 추출 (Authorization 헤더 또는 쿠키에서)
     private String extractToken(HttpServletRequest request) {
-        String token = null;
-        String header = request.getHeader("Authorization");
-
-        if (header != null && header.startsWith("Bearer ")) {
-            token = header.substring(7);  
+    	// 헤더 추출 
+        String authz = request.getHeader("Authorization");
+        if (authz != null && authz.startsWith("Bearer ")) {
+            return authz.substring(7).trim();
         }
-        if (token == null) {
-            // 쿠키에서 토큰을 추출 
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie cookie : cookies) {
-                    if ("access_token".equals(cookie.getName())) {
-                        token = cookie.getValue();  
-                        break;
-                    }
+
+        // 커스텀 헤더 추출 
+        String atHeader = request.getHeader("access_token");
+        if (atHeader != null && !atHeader.isBlank()) {
+            return atHeader.trim();
+        }
+
+        // 쿠키에서 추출 
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                if ("access_token".equals(c.getName())) {
+                    String v = c.getValue();
+                    if (v != null && !v.isBlank()) return v;
                 }
             }
         }
-        
-        return token;
+        return null;
     }
 }
