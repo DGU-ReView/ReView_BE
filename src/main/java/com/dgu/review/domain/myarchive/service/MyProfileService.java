@@ -56,14 +56,13 @@ public class MyProfileService {
             throw new ApiException(ErrorCode.TAG_LIMIT_EXCEEDED);
         }
 
-        // 갈아끼우기 (clear 후 addAll로 교체)
+        // 새로운 태그로 다시 저장 
         user.getExperienceTags().clear();
         user.getExperienceTags().addAll(newExp);
 
         user.getGrowthTags().clear();
         user.getGrowthTags().addAll(newGrow);
 
-        // dirty checking으로 flush/UPDATE 됨
 
         return MyProfileUpdateResponse.builder()
         		.message("프로필 태그가 저장되었습니다.")
