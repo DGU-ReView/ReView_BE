@@ -4,11 +4,15 @@ import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 
+@Slf4j
 final class JsonEnumHelper {
     static final ObjectMapper OM = new ObjectMapper();
 
@@ -35,6 +39,8 @@ final class JsonEnumHelper {
             return result;
         } catch (Exception e) {
             //빈집합 반환 
+        	log.warn("Failed to parse enum set. enumType={}, rawJson={}"
+        			,enumType.getSimpleName(),json,e);
             return EnumSet.noneOf(enumType);
         }
     }
