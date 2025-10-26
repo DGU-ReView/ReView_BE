@@ -68,3 +68,6 @@ management:
   endpoint:
     health:
       show-details: always
+notification:
+  random:
+    probability: 10

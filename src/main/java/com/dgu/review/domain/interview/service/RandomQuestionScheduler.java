@@ -7,6 +7,7 @@ import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +24,16 @@ public class RandomQuestionScheduler {
     private final Random random = new Random();
     private final PeerFeedbackRepository peerFeedbackRepository;
 
+    @Value("${notification.random.probability}")
+    private int notificationRandomProbability;
+
     @Scheduled(fixedRate = 60000)
     @Transactional(readOnly = true)
     public void sendRandomQuestionNotification() {
         var activeUserIds = randomNotificationService.getActiveUserIds();
 
         for (Long userId : activeUserIds) {
-            if (random.nextInt(100) < 10) {
+            if (random.nextInt(100) < notificationRandomProbability) {
 
                 List<Long> eligiblePeerIds = peerFeedbackRepository.findEligiblePeerFeedbackIdsForUser(userId);
 
