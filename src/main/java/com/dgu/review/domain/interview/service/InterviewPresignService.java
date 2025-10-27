@@ -1,3 +1,4 @@
+
 package com.dgu.review.domain.interview.service;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -215,6 +216,7 @@ private String mapResumeContentType(String ext) {
         }
         return key;
     }
+
     
     public String getFeedbackRecordingObjectKey(Long questionId) {
         String redisKey = "presign:recording:feedbackquestion:" + questionId;
@@ -225,3 +227,4 @@ private String mapResumeContentType(String ext) {
         return key;
     }
 }
+

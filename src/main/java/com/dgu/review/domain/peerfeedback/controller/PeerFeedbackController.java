@@ -1,7 +1,6 @@
 package com.dgu.review.domain.peerfeedback.controller;
 
 import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackRequest;
-import com.dgu.review.domain.peerfeedback.dto.PeerFeedbackResponse;
 import com.dgu.review.domain.peerfeedback.dto.RandomRecordingResponse;
 import com.dgu.review.domain.peerfeedback.service.PeerFeedbackService;
 import com.dgu.review.domain.user.entity.User;
@@ -53,14 +52,5 @@ public class PeerFeedbackController {
     }
 
 
-    /**
-     * 내가 작성한 평가 상세 조회
-     */
-    @GetMapping("/mypage/feedbacks/{feedbackId}")
-    public ResponseEntity<ApiResponse<PeerFeedbackResponse>> getMyFeedbackDetail(
-            @PathVariable Long feedbackId
-    ) {
-        var res = peerFeedbackService.getFeedbackDetail(feedbackId);
-        return ResponseEntity.ok(ApiResponse.ok(res));
-    }
+
 }

@@ -13,14 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.dgu.review.domain.interview.entity.FeedbackQuestion;
 import com.dgu.review.domain.interview.entity.InterviewQuestion;
 import com.dgu.review.domain.interview.entity.InterviewSession;
 import com.dgu.review.domain.interview.entity.Recording;
+import com.dgu.review.domain.interview.repository.FeedbackQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewQuestionRepository;
 import com.dgu.review.domain.interview.repository.InterviewSessionRepository;
 import com.dgu.review.domain.myarchive.dto.AnswerCheckItem;
 import com.dgu.review.domain.myarchive.dto.CursorPageResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
+import com.dgu.review.domain.myarchive.dto.MyInterviewRandomQuestionResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
@@ -45,6 +48,7 @@ public class MyInterviewService {
     private final GetUserService getUserService;
     private final InterviewGetUrlService interviewGetUrlService;
     private final PeerFeedbackRepository peerFeedbackRepository;
+    private final FeedbackQuestionRepository feedbackQuestionRepository;
 
     // 면접 목록 조회 
     public CursorPageResponse<MyInterviewListItemResponse> getMyInterviews(Long cursor, int limit) {
@@ -209,6 +213,34 @@ public class MyInterviewService {
         );
     }
     
+    // 질문별 랜덤 질문 답변 & 피드백 확인 
+    public List<MyInterviewRandomQuestionResponse> getRandomQuestionAnswers(Long questionId) {
+        Long userId = getUserService.getUserId();
+
+        List<FeedbackQuestion> list = feedbackQuestionRepository
+                .findAllByParentQuestionIdAndUserId(questionId, userId);
+
+
+        return list.stream()
+                .map(fq -> {
+                    var rec = fq.getRecording();
+                    String sttText = (rec != null) ? rec.getSttText() : null;
+                    String objectKey = (rec != null) ? rec.getObjectKey() : null;
+                    String recordingUrl = null;
+                    if(objectKey !=null) {
+                    	recordingUrl = interviewGetUrlService.createRecordingGetUrl(objectKey);
+                    }
+                    return new MyInterviewRandomQuestionResponse(
+                            fq.getQuestion(),
+                            fq.getAiFeedback(),
+                            fq.getSelfFeedback(),
+                            sttText,
+                            recordingUrl
+                    );
+                })
+                .toList();
+    }
+    
     // 면접 제목 수정 
     @Transactional
     public MyInterviewTitleUpdateResponse updateTitle(Long interviewId, MyInterviewTitleUpdateRequest req) {
@@ -229,5 +261,17 @@ public class MyInterviewService {
         return new MyInterviewTitleUpdateResponse(session.getId(), session.getTitle());
     }
     
+    //면접 삭제 
+    @Transactional
+    public void deleteMySession(Long sessionId) {
+        Long userId = getUserService.getUserId();
+
+        InterviewSession session = interviewSessionRepository
+                .findByIdAndUserId(sessionId, userId)
+                .orElseThrow(() -> new RuntimeException("세션이 없거나 권한이 없습니다."));
+
+        // 삭제
+        interviewSessionRepository.delete(session);
+    }
     
 }

@@ -3,6 +3,7 @@ package com.dgu.review.domain.myarchive.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dgu.review.domain.myarchive.dto.AnswerCheckItem;
 import com.dgu.review.domain.myarchive.dto.CursorPageResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewListItemResponse;
+import com.dgu.review.domain.myarchive.dto.MyInterviewRandomQuestionResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewSummaryResponse;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateRequest;
 import com.dgu.review.domain.myarchive.dto.MyInterviewTitleUpdateResponse;
@@ -60,6 +62,15 @@ public class MyInterviewController {
     }
 	
 	// 나의 면접 상세 조회 - 랜덤 질문 답변 조회 
+	@GetMapping("/questions/{questionId}/random-questions")
+    public ResponseEntity<ApiResponse<List<MyInterviewRandomQuestionResponse>>> getRandomQuestionAnswers(
+            @PathVariable("questionId") Long questionId
+    ) {
+        List<MyInterviewRandomQuestionResponse> result =
+        		myInterviewService.getRandomQuestionAnswers(questionId);
+
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
 
 	// 나의 면접 제목 수정
 	@PatchMapping(value = "/{interviewId}/title")
@@ -71,4 +82,11 @@ public class MyInterviewController {
 
 
 	// 나의 면접 세션 삭제
+	@DeleteMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMySession(
+            @PathVariable("sessionId") Long sessionId
+    ) {
+		myInterviewService.deleteMySession(sessionId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
 }

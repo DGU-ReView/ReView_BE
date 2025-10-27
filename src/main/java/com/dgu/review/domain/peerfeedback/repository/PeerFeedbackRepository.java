@@ -34,5 +34,21 @@ public interface PeerFeedbackRepository extends JpaRepository<PeerFeedback, Long
         AND pf.generatedQuestion IS NULL
     """)
     List<Long> findEligiblePeerFeedbackIdsForUser(@Param("userId") Long userId);
+    
+    @Query("""
+            SELECT pf
+            FROM PeerFeedback pf
+            JOIN FETCH pf.recording r
+            JOIN FETCH r.interviewQuestion iq
+            JOIN FETCH iq.interviewSession s
+            WHERE pf.user.id = :userId
+              AND (:cursor IS NULL OR pf.id < :cursor)
+            ORDER BY pf.id DESC
+        """)
+        List<PeerFeedback> findSliceByUserId(
+                @Param("userId") Long userId,
+                @Param("cursor") Long cursor,
+                Pageable pageable
+        );
 
 }

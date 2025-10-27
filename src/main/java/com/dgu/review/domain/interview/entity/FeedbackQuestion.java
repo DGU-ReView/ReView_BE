@@ -1,5 +1,6 @@
 package com.dgu.review.domain.interview.entity;
 
+
 import com.dgu.review.domain.common.entity.BaseEntity;
 import com.dgu.review.domain.peerfeedback.entity.PeerFeedback;
 import jakarta.persistence.*;
@@ -57,4 +58,7 @@ public class FeedbackQuestion extends BaseEntity {
     public void attachSelfFeedback(String selfFeedback) {
         this.selfFeedback = selfFeedback;
     }
+
 }
+
+
