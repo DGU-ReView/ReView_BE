@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/myarhive/myfeedbacks")
+@RequestMapping("/api/myarchive/myfeedbacks")
 public class MyfeedbackController {
 
     private final MyfeedbackService myFeedbackService;
