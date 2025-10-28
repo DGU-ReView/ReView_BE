@@ -37,13 +37,15 @@ public class PeerFeedbackService {
 
         long totalCount = recordingRepository.countRootRecordingsExcludingUser(currentUserId);
         if (totalCount == 0) {
-            return new RandomRecordingResponse(
-                    null,      // recordingId
-                    null,                // question
-                    null,                // sttText
-                    null,                // jobRole
-                    "현재 평가 가능한 녹음이 없습니다." // recordingUrl 대신 메시지 전달
-            );
+            return RandomRecordingResponse.builder()
+                    .recordingId(null)
+                    .question(null)
+                    .sttText(null)
+                    .jobRole(null)
+                    .recordingUrl(null)
+                    .message("현재 평가 가능한 녹음이 없습니다.")
+                    .build();
+
         }
 
         int randomIndex = new Random().nextInt((int) totalCount);
@@ -60,13 +62,14 @@ public class PeerFeedbackService {
 
         String recordingUrl = interviewObjectReadService.createRecordingGetUrl(randomRecording.getObjectKey());
 
-        return new RandomRecordingResponse(
-                randomRecording.getId(),
-                question.getQuestion(),
-                randomRecording.getSttText(),
-                session.getJobRole(),
-                recordingUrl
-        );
+        return RandomRecordingResponse.builder()
+                .recordingId(randomRecording.getId())
+                .question(question.getQuestion())
+                .sttText(randomRecording.getSttText())
+                .jobRole(session.getJobRole())
+                .recordingUrl(recordingUrl)
+                .message(null)
+                .build();
     }
 
     /**
