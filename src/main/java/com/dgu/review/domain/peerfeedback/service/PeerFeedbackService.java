@@ -37,7 +37,13 @@ public class PeerFeedbackService {
 
         long totalCount = recordingRepository.countRootRecordingsExcludingUser(currentUserId);
         if (totalCount == 0) {
-            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+            return new RandomRecordingResponse(
+                    null,      // recordingId
+                    null,                // question
+                    null,                // sttText
+                    null,                // jobRole
+                    "현재 평가 가능한 녹음이 없습니다." // recordingUrl 대신 메시지 전달
+            );
         }
 
         int randomIndex = new Random().nextInt((int) totalCount);
