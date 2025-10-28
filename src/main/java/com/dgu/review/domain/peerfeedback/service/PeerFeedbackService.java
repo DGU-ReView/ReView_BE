@@ -44,7 +44,7 @@ public class PeerFeedbackService {
         var pageable = PageRequest.of(randomIndex, 1);
 
         Recording randomRecording = recordingRepository
-                .findRootRecordingAtOffset(currentUserId, pageable)
+                .findRootRecordingExcludingUserAndAlreadyEvaluated(currentUserId, pageable)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
@@ -74,6 +74,10 @@ public class PeerFeedbackService {
         if (recording.getInterviewQuestion().getInterviewSession().getUser().getId()
                 .equals(evaluator.getId())) {
             throw new ApiException(ErrorCode.SELF_FEEDBACK_NOT_ALLOWED);
+        }
+        //이미 평가한 타인의 녹음 평가 방지.
+        if (peerFeedbackRepository.existsByUserAndRecording(evaluator, recording)) {
+            throw new ApiException(ErrorCode.DUPLICATE_PEER_FEEDBACK);
         }
 
         PeerFeedback feedback = PeerFeedback.builder()
