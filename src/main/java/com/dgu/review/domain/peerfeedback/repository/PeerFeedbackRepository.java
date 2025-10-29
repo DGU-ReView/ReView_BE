@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import com.dgu.review.domain.interview.entity.Recording;
 
 import java.util.List;
 
@@ -50,5 +51,5 @@ public interface PeerFeedbackRepository extends JpaRepository<PeerFeedback, Long
                 @Param("cursor") Long cursor,
                 Pageable pageable
         );
-
+    boolean existsByUserAndRecording(User user, Recording recording);
 }

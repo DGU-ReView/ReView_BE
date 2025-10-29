@@ -37,14 +37,22 @@ public class PeerFeedbackService {
 
         long totalCount = recordingRepository.countRootRecordingsExcludingUser(currentUserId);
         if (totalCount == 0) {
-            throw new ApiException(ErrorCode.RECORDING_NOT_FOUND);
+            return RandomRecordingResponse.builder()
+                    .recordingId(null)
+                    .question(null)
+                    .sttText(null)
+                    .jobRole(null)
+                    .recordingUrl(null)
+                    .message("현재 평가 가능한 녹음이 없습니다.")
+                    .build();
+
         }
 
         int randomIndex = new Random().nextInt((int) totalCount);
         var pageable = PageRequest.of(randomIndex, 1);
 
         Recording randomRecording = recordingRepository
-                .findRootRecordingAtOffset(currentUserId, pageable)
+                .findRootRecordingExcludingUserAndAlreadyEvaluated(currentUserId, pageable)
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new ApiException(ErrorCode.RECORDING_NOT_FOUND));
@@ -54,13 +62,14 @@ public class PeerFeedbackService {
 
         String recordingUrl = interviewObjectReadService.createRecordingGetUrl(randomRecording.getObjectKey());
 
-        return new RandomRecordingResponse(
-                randomRecording.getId(),
-                question.getQuestion(),
-                randomRecording.getSttText(),
-                session.getJobRole(),
-                recordingUrl
-        );
+        return RandomRecordingResponse.builder()
+                .recordingId(randomRecording.getId())
+                .question(question.getQuestion())
+                .sttText(randomRecording.getSttText())
+                .jobRole(session.getJobRole())
+                .recordingUrl(recordingUrl)
+                .message(null)
+                .build();
     }
 
     /**
@@ -74,6 +83,10 @@ public class PeerFeedbackService {
         if (recording.getInterviewQuestion().getInterviewSession().getUser().getId()
                 .equals(evaluator.getId())) {
             throw new ApiException(ErrorCode.SELF_FEEDBACK_NOT_ALLOWED);
+        }
+        //이미 평가한 타인의 녹음 평가 방지.
+        if (peerFeedbackRepository.existsByUserAndRecording(evaluator, recording)) {
+            throw new ApiException(ErrorCode.DUPLICATE_PEER_FEEDBACK);
         }
 
         PeerFeedback feedback = PeerFeedback.builder()

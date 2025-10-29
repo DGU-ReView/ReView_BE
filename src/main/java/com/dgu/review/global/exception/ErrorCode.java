@@ -114,7 +114,10 @@ public enum ErrorCode {
 	INVALID_TAG_REQUEST("InvalidTagRequest", 
 			HttpStatus.BAD_REQUEST, "선택된 태그가 없습니다. "),
 	TAG_LIMIT_EXCEEDED("TagLimitExceeded", 
-			HttpStatus.BAD_REQUEST, "태그는 최대 3개까지 선택할 수 있습니다.")
+			HttpStatus.BAD_REQUEST, "태그는 최대 3개까지 선택할 수 있습니다."),
+
+    DUPLICATE_PEER_FEEDBACK("DUPLICATE_PEER_FEEDBACK",
+            HttpStatus.BAD_REQUEST, "이미 해당 녹음에 대한 피드백이 존재합니다."),
 	;
 
 	private final String code;
