@@ -65,8 +65,8 @@ public class SecurityConfig {
 						"/login/oauth2/code/kakao", "/swagger-ui/**", "/v3/api-docs/**")
 				.permitAll().anyRequest().authenticated())
 				.exceptionHandling(e -> e
-						.defaultAuthenticationEntryPointFor(restAuthEntryPoint, new AntPathRequestMatcher("/api/**"))
-						.defaultAccessDeniedHandlerFor(restAccessDeniedHandler(), new AntPathRequestMatcher("/api/**")))
+						.authenticationEntryPoint(restAuthEntryPoint) 
+			            .accessDeniedHandler(restAccessDeniedHandler()))
 				.oauth2Login(oauth -> oauth
 						.authorizationEndpoint(
 								auth -> auth.authorizationRequestRepository(cookieAuthorizationRequestRepository))
