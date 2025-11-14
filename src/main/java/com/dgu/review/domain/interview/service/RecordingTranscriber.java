@@ -112,9 +112,10 @@ public class RecordingTranscriber {
                     log.error("[feedback] async job failed, rootId={}", rootQ.getId(), e);
                 }
 
-                statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
-
             }
+
+            statusService.setStatus(recordingId, RecordingStatus.FOLLOWUP_GENERATED, Duration.ofDays(1));
+
         } catch (Exception e) {
             statusService.setStatus(recordingId, RecordingStatus.FAILED, null);
             recording.updateFailedAt(LocalDateTime.now());
