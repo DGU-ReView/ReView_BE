@@ -14,13 +14,15 @@ import com.dgu.review.global.exception.ApiException;
 import com.dgu.review.global.exception.ErrorCode;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.dgu.review.domain.interview.service.InterviewObjectReadService;
 
 import java.util.Random;
 
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -36,6 +38,8 @@ public class PeerFeedbackService {
     public RandomRecordingResponse getRandomRecording(Long currentUserId) {
 
         long totalCount = recordingRepository.countRootRecordingsExcludingUser(currentUserId);
+        log.info("내 이름 : " + currentUserId);
+        log.info("갯수 : " + totalCount);
         if (totalCount == 0) {
             return RandomRecordingResponse.builder()
                     .recordingId(null)
