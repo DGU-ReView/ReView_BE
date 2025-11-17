@@ -1,6 +1,5 @@
 package com.dgu.review.global.configuration;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -62,7 +61,7 @@ public class SecurityConfig {
 			return config;
 		})).authorizeHttpRequests(auth -> auth
 				.requestMatchers("/", "/health", "/favicon.ico", "/error", "/oauth2/authorization/kakao", "/actuator/health",
-						"/login/oauth2/code/kakao", "/swagger-ui/**", "/v3/api-docs/**")
+						"/login/oauth2/code/kakao", "/swagger-ui/**", "/v3/api-docs/**", "/api/community/pages/**")
 				.permitAll().anyRequest().authenticated())
 				.exceptionHandling(e -> e
 						.authenticationEntryPoint(restAuthEntryPoint) 
@@ -107,12 +106,8 @@ public class SecurityConfig {
 
 			// 성공 후 리다이렉트 
 			log.info("로그인에 성공했습니다. kakaoId : {}", kakaoId);
-			// 프론트 배포 성공시 변경 
-            res.sendRedirect("http://localhost:5173/"); 
-			// json 반환 
-//            res.setStatus(HttpServletResponse.SC_OK); // 200
-//            res.setContentType("text/plain;charset=UTF-8");
-//            res.getWriter().write("로그인 성공");
+			// 프론트 홈으로 반환 
+            res.sendRedirect("https://re-view-me.shop/"); 
 		};
 	}
 
@@ -121,7 +116,7 @@ public class SecurityConfig {
 		return (HttpServletRequest req, HttpServletResponse res, AuthenticationException ex) -> {
 			// 실패 로그
 			log.error("🚨OAuth2 login failed", ex);
-			// 프론트 연동 시 사용할 리다이렉트 
+			// 프론트로 메세지와 함께 반환 
 			 res.sendRedirect("/login?error=" + (ex.getMessage() == null ? "oauth2_failed" : ex.getMessage()));
 		};
 	}
